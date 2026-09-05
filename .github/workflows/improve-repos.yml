@@ -1,0 +1,49 @@
+name: Repo Improver Bot
+
+on:
+  schedule:
+    # 5 runs per day, IST times (UTC offsets):
+    # 9:00 AM IST  = 03:30 UTC
+    # 11:30 AM IST = 06:00 UTC
+    # 2:00 PM IST  = 08:30 UTC
+    # 4:30 PM IST  = 11:00 UTC
+    # 7:00 PM IST  = 13:30 UTC
+    - cron: "30 3 * * *"
+    - cron: "0 6 * * *"
+    - cron: "30 8 * * *"
+    - cron: "0 11 * * *"
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  improve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bot repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run repo improver
+        env:
+          GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
+        run: python improve.py
+
+      - name: Upload run summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-summary
+          path: run_summary.json
+          retention-days: 30
