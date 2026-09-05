@@ -37,7 +37,7 @@ jobs:
 
       - name: Run repo improver
         env:
-          GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
+          GH_TOKEN: ${{ vars.REPO_IMPROVER_TOKEN }}
         run: python improve.py
 
       - name: Upload run summary
