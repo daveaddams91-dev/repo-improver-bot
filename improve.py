@@ -754,7 +754,7 @@ This file is automatically updated on every run to keep the repository active.
 GitHub auto-disables scheduled workflows after 60 days of repo inactivity;
 this heartbeat prevents that.
 """
-    commit_file(OWNER, "repo-improver-bot", "LAST_RUN.md", content, "chore: keep-alive heartbeat")
+    commit_file(OWNER, "repo-improver-bot", "LAST_RUN.md", content, "main", "chore: keep-alive heartbeat")
     print(f"  Keep-alive: updated LAST_RUN.md ({ts})")
 
 
