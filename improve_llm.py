@@ -150,21 +150,21 @@ def run_tests(improved_code, filename, tests_code):
     """Run the LLM's pytest suite against the improved module.
 
     Only runs when the module is import-safe (has a __main__ guard), so we
-    never execute heavy module-level computation. Returns (ran, passed).
+    never execute heavy module-level computation. Returns (ran, passed, output).
     """
     if not tests_code:
-        return False, True
+        return False, True, ""
     try:
         tree = ast.parse(improved_code)
     except SyntaxError:
-        return False, False
+        return False, False, "improved code has syntax errors"
     has_guard = any(
         isinstance(n, ast.If) and isinstance(n.test, ast.Compare)
         and getattr(n.test.left, "id", "") == "__name__"
         for n in ast.walk(tree))
     if not has_guard:
         print("    (no __main__ guard; skipping test execution)")
-        return False, True
+        return False, True, ""
 
     with tempfile.TemporaryDirectory() as tmp:
         module_path = os.path.join(tmp, os.path.basename(filename))
@@ -178,9 +178,10 @@ def run_tests(improved_code, filename, tests_code):
             r = subprocess.run(
                 [sys.executable, "-m", "pytest", "-x", "-q", tests_dir],
                 capture_output=True, text=True, timeout=120, cwd=tmp)
-            return True, r.returncode == 0
+            output = (r.stdout or "") + "\n" + (r.stderr or "")
+            return True, r.returncode == 0, output
         except subprocess.TimeoutExpired:
-            return True, False
+            return True, False, "pytest timed out after 120s"
 
 
 # ---------------------------------------------------------------------------
@@ -208,20 +209,28 @@ The current file content:
 ```"""
 
 
-def llm_improve_file(repo_name, filename, source, description=None):
+def llm_improve_file(repo_name, filename, source, description=None, failure_feedback=None):
     """Ask the LLM to improve one file. Returns dict or None."""
     if len(source.encode()) > MAX_FILE_BYTES:
         print(f"    Skipping {filename} (too large for LLM context)")
         return None
 
     desc = f"Repository description: {description}" if description else ""
+    prompt = PROMPT_TEMPLATE.format(
+        filename=filename, repo_name=repo_name,
+        description_line=desc, source=source)
+    if failure_feedback:
+        prompt += ("\n\nIMPORTANT: your previous attempt at improving this file produced "
+                   "an improvement or tests that FAILED. Here is the pytest output:\n\n"
+                   + failure_feedback[-3000:]
+                   + "\n\nFix whichever was wrong — the improved code or the tests — "
+                     "and return the same JSON structure. The improved code must still "
+                     "genuinely improve the original, and the tests must pass against it.")
     messages = [
         {"role": "system", "content": (
             "You are an expert Python engineer who improves code while preserving "
             "its external behavior exactly. You always return valid JSON.")},
-        {"role": "user", "content": PROMPT_TEMPLATE.format(
-            filename=filename, repo_name=repo_name,
-            description_line=desc, source=source)},
+        {"role": "user", "content": prompt},
     ]
     content = call_llm(messages)
     if not content:
@@ -299,19 +308,34 @@ def main():
         source = improve.get_file_content(owner, repo_name, pf, default_branch)
         if not source:
             continue
-        result = llm_improve_file(repo_name, pf, source, repo.get("description"))
+        result = None
+        failure = None
+        for attempt in range(2):  # initial attempt + one self-repair round
+            result = llm_improve_file(repo_name, pf, source, repo.get("description"),
+                                      failure_feedback=failure)
+            if not result:
+                break
+            improved = result["improved_code"]
+            if improved.strip() == source.strip():
+                print("    LLM returned identical code; skipping")
+                result = None
+                break
+            ran, passed, output = run_tests(improved, pf, result["tests"])
+            if ran and passed:
+                print("    LLM tests passed" if attempt == 0 else "    LLM tests passed after self-repair")
+                break
+            if ran and not passed:
+                print(f"    LLM tests FAILED (attempt {attempt + 1}); "
+                      + ("sending failure back for repair" if attempt == 0 else "discarding"))
+                print("    ---- pytest output (tail) ----")
+                for line in output.strip().splitlines()[-15:]:
+                    print(f"    | {line}")
+                failure = output
+                result = None
+                continue
         if not result:
             continue
         improved = result["improved_code"]
-        if improved.strip() == source.strip():
-            print("    LLM returned identical code; skipping")
-            continue
-        ran, passed = run_tests(improved, pf, result["tests"])
-        if ran and not passed:
-            print("    LLM tests FAILED against its own improvement; discarding")
-            continue
-        if ran and passed:
-            print("    LLM tests passed")
         changes[pf] = improved
         if result["tests"]:
             # LLM tests replace the pattern engine's generic import-check tests
