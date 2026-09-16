@@ -34,9 +34,21 @@ from datetime import datetime, timezone
 import improve  # pattern engine (v3.1) — provides all the GitHub plumbing
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
-LLM_TOKENS = [t for t in (os.environ.get("LLM_TOKEN"), GH_TOKEN) if t]
-MODELS_ENDPOINT = "https://models.github.ai/inference/chat/completions"
-MODELS_TO_TRY = ["openai/gpt-4.1-mini", "meta/Llama-3.3-70B-Instruct"]
+# LLM provider: any OpenAI-compatible chat-completions endpoint.
+#   LLM_API_KEY  — explicit API key for the provider (e.g. Groq/OpenRouter)
+#   LLM_BASE_URL — provider base URL (default: GitHub Models)
+#   LLM_MODEL    — model id (default: tries both models below)
+# Falls back to LLM_TOKEN / GH_TOKEN against GitHub Models when no key is set.
+LLM_API_KEY = os.environ.get("LLM_API_KEY")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://models.github.ai/inference")
+MODELS_ENDPOINT = LLM_BASE_URL.rstrip("/") + "/chat/completions"
+DEFAULT_MODELS = ["openai/gpt-4.1-mini", "meta/Llama-3.3-70B-Instruct"]
+if LLM_API_KEY:
+    LLM_TOKENS = [LLM_API_KEY]
+    MODELS_TO_TRY = [m for m in [os.environ.get("LLM_MODEL")] if m] or DEFAULT_MODELS
+else:
+    LLM_TOKENS = [t for t in (os.environ.get("LLM_TOKEN"), GH_TOKEN) if t]
+    MODELS_TO_TRY = [m for m in [os.environ.get("LLM_MODEL")] if m] or DEFAULT_MODELS
 MAX_FILE_BYTES = 60_000
 MAX_FILES = 3
 TODAY = datetime.now(timezone.utc).strftime("%Y%m%d")
