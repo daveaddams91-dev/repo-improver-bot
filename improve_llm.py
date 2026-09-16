@@ -74,6 +74,8 @@ def call_llm(messages):
                 headers={
                     "Authorization": f"Bearer {token}",
                     "Content-Type": "application/json",
+                    # Cloudflare (Groq and others) blocks urllib's default UA
+                    "User-Agent": "repo-improver-bot/1.0",
                 })
             try:
                 with urllib.request.urlopen(req, timeout=180) as resp:
