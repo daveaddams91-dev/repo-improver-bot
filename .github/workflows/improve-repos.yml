@@ -19,6 +19,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  models: read
 
 jobs:
   improve:
@@ -33,12 +34,13 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests pytest
 
       - name: Run repo improver
         env:
           GH_TOKEN: ${{ vars.REPO_IMPROVER_TOKEN }}
-        run: python improve.py
+          LLM_TOKEN: ${{ github.token }}
+        run: python improve_llm.py
 
       - name: Upload run summary
         if: always()
