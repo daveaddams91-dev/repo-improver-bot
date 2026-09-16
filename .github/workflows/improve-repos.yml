@@ -36,7 +36,7 @@ jobs:
           LLM_MODEL: ${{ vars.LLM_MODEL }}
           LLM2_API_KEY: ${{ vars.LLM2_API_KEY }}
           LLM2_BASE_URL: ${{ vars.LLM2_BASE_URL }}
-          LLM2_MODEL: ${{ vars.LLM2_MODEL }}
+          LLM2_MODEL: ${{ vars.LLM2_MOQN }}
           MAX_REPOS_PER_RUN: "2"
         run: python improve_llm.py
 
