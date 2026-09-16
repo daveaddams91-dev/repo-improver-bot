@@ -37,6 +37,7 @@ GH_TOKEN = os.environ.get("GH_TOKEN", "")
 # LLM providers: any OpenAI-compatible chat-completions endpoints, tried in order.
 #   Provider 1: LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
 #   Provider 2: LLM2_API_KEY / LLM2_BASE_URL / LLM2_MODEL   (optional fallback)
+#   Provider 3: LLM3_API_KEY / LLM3_BASE_URL / LLM3_MODEL   (optional fallback)
 # Falls back to LLM_TOKEN / GH_TOKEN against GitHub Models when no key is set.
 DEFAULT_MODELS = ["openai/gpt-4.1-mini", "meta/Llama-3.3-70B-Instruct"]
 
@@ -82,7 +83,7 @@ def _discover_models(provider):
         return []
 
 
-PROVIDERS = [p for p in (_provider("LLM_"), _provider("LLM2_")) if p]
+PROVIDERS = [p for p in (_provider("LLM_"), _provider("LLM2_"), _provider("LLM3_")) if p]
 if not PROVIDERS:
     _tokens = [t for t in (os.environ.get("LLM_TOKEN"), GH_TOKEN) if t]
     PROVIDERS = [{"endpoint": "https://models.github.ai/inference/chat/completions",
