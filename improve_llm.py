@@ -200,7 +200,7 @@ Return STRICT JSON only — no markdown fences, no commentary:
 {{
   "improved_code": "<complete improved file content>",
   "summary": "<concise bullet list of changes and why>",
-  "tests": "<pytest test file testing the improved code. Load the module with importlib using MODULE_FILENAME as the file path since the filename may contain spaces. Test real behavior (known values, properties, output format). Or null if tests are impossible.>"
+  "tests": "<pytest test file for the improved code. Test-writing rules: (1) Load the module with importlib.util.spec_from_file_location using the literal string 'MODULE_FILENAME' as the file path — it is replaced by the real filename which may contain spaces, so always treat it as a string value, NEVER as a variable or identifier. (2) Digit strings follow the OEIS b-file convention: the leading integer-part digit is included, so constants between 0 and 1 begin with the character '0' (e.g. '083462...') — write assertions accordingly. (3) Test real behavior: known values, prefix properties, output file format. Or null if tests are impossible.>"
 }}
 
 The current file content:
@@ -225,7 +225,10 @@ def llm_improve_file(repo_name, filename, source, description=None, failure_feed
                    + failure_feedback[-3000:]
                    + "\n\nFix whichever was wrong — the improved code or the tests — "
                      "and return the same JSON structure. The improved code must still "
-                     "genuinely improve the original, and the tests must pass against it.")
+                     "genuinely improve the original, and the tests must pass against it. "
+                     "Before changing the code, check whether the failing TEST assertion "
+                     "is what's wrong — e.g. it assumes no leading zero in digit strings "
+                     "(OEIS convention keeps it) or misuses MODULE_FILENAME as an identifier.")
     messages = [
         {"role": "system", "content": (
             "You are an expert Python engineer who improves code while preserving "
