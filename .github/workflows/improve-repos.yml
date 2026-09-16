@@ -29,14 +29,17 @@ jobs:
 
       - name: Run repo improver
         env:
-          GH_TOKEN: ${{ vars.REPO_IMPROVER_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
           LLM_TOKEN: ${{ github.token }}
-          LLM_API_KEY: ${{ vars.LLM_API_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}
-          LLM2_API_KEY: ${{ vars.LLM2_API_KEY }}
+          LLM2_API_KEY: ${{ secrets.LLM2_API_KEY }}
           LLM2_BASE_URL: ${{ vars.LLM2_BASE_URL }}
           LLM2_MODEL: ${{ vars.LLM2_MODEL }}
+          LLM3_API_KEY: ${{ secrets.LLM3_API_KEY }}
+          LLM3_BASE_URL: ${{ vars.LLM3_BASE_URL }}
+          LLM3_MODEL: ${{ vars.LLM3_MODEL }}
           MAX_REPOS_PER_RUN: "2"
         run: python improve_llm.py
 
