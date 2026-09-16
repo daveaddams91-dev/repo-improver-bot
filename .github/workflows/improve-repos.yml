@@ -40,6 +40,9 @@ jobs:
         env:
           GH_TOKEN: ${{ vars.REPO_IMPROVER_TOKEN }}
           LLM_TOKEN: ${{ github.token }}
+          LLM_API_KEY: ${{ vars.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
         run: python improve_llm.py
 
       - name: Upload run summary
