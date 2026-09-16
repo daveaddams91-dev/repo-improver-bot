@@ -452,14 +452,21 @@ def process_repo(repo):
         if not result:
             continue
         improved = result["improved_code"]
+        # Some LLMs return "summary" as a JSON list instead of a string —
+        # normalize it so string concatenation below can never crash.
+        summary = result.get("summary", "")
+        if isinstance(summary, (list, tuple)):
+            summary = "; ".join(str(s) for s in summary)
+        elif not isinstance(summary, str):
+            summary = str(summary)
         changes[pf] = improved
         if result["tests"]:
             # LLM tests replace the pattern engine's generic import-check tests
             changes["tests/test_main.py"] = result["tests"]
             changes["tests/__init__.py"] = changes.get("tests/__init__.py", "")
         llm_files.append(pf)
-        llm_summaries.append(f"**{pf}**: {result['summary']}")
-        code_fixes_log.append({"file": pf, "fixes": ["LLM: " + result["summary"]]})
+        llm_summaries.append(f"**{pf}**: {summary}")
+        code_fixes_log.append({"file": pf, "fixes": ["LLM: " + summary]})
 
     if not changes:
         print("No improvements to make.")
