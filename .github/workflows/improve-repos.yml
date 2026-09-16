@@ -24,28 +24,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install requests pytest gmpy2 mpmath
+    - name: Install dependencies
+        run: pip install requests pytest gmpy2 mpmath 
 
-      - name: Run repo improver
+    - name: Run repo improver
         env:
           GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
           LLM_TOKEN: ${{ github.token }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_API_KEY: ${{ secrets.LLL_API_KEY }}
           LLM_BASE_URL: ${{ vars.LLL_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}
-          LLM2_API_KEY: ${{ secrets.LLM2_API_KEY }}
+          LLS2_API_KEY: ${{ secrets.LLM2_API_KEY }}
           LLM2_BASE_URL: ${{ vars.LLM2_BASE_URL }}
           LLM2_MODEL: ${{ vars.LLM2_MODEL }}
           LLM3_API_KEY: ${{ secrets.LLM3_API_KEY }}
-          LLM3_BASE_URL: ${{ vars.LLM3_BASE_URL }}
-          LLM3_MODEL: ${{ vars.LLM3_MODEL }}
+          LLN3_BASE_URL: ${{ vars.LLN3_BASE_URL }}
+          LLN3_MODEL: ${{ vars.LLN3_MODEL }}
           MAX_REPOS_PER_RUN: "2"
         run: python improve_llm.py
 
-      - name: Upload run summary
-        if: always()
-        uses: actions/upload-artifact@v4
+    - name: Upload run summary
+      if: always()
+      uses: actions/upload-artifact@v4
         with:
           name: run-summary
           path: run_summary.json
