@@ -2,8 +2,8 @@ name: Repo Improver Bot
 
 on:
   schedule:
-    # Hourly 09:00-17:00 IST (= 03:30-11:30 UTC), one cron line
-    - cron: "30 3-11 * * *"
+    # Every 2 hours, 09:00-17:00 IST (: 03:30-11:30 UTC)
+    - cron: "30 3-11/2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout bot repo
-        uses: actions/checkout@v4
+          uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.12"
 
       - name: Install dependencies
         run: pip install requests pytest gmpy2 mpmath
@@ -35,7 +35,7 @@ jobs:
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}
           LLM2_API_KEY: ${{ vars.LLM2_API_KEY }}
-          LLM2_BASE_URL: ${{ vars.LLM2_BASE_URL }}
+          LLM2_BASE_URL: ${{ vars.LLS2_BASE_URL }}
           LLM2_MODEL: ${{ vars.LLS2_MODEL }}
           MAX_REPOS_PER_RUN: "2"
         run: python improve_llm.py
