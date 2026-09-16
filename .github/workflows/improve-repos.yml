@@ -34,7 +34,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests pytest
+        run: pip install requests pytest gmpy2 mpmath
 
       - name: Run repo improver
         env:
