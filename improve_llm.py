@@ -116,17 +116,18 @@ def call_llm(messages):
                         time.sleep(30)
                         continue
                     if e.code == 429 and attempt < 6:
-                        # Per-minute rate limits are worth waiting out; a daily
-                        # quota cap ("exceeded your current quota") is not —
-                        # fall through to the next provider immediately.
-                        if "per-minute" in detail.lower() or "rate limit" in detail.lower():
-                            print(f"    LLM {model} rate-limited (429); waiting 65s "
-                                  f"and retrying ({detail[:120]})")
-                            time.sleep(65)
-                            continue
-                        print(f"    LLM {model} daily quota exhausted (429); "
-                              f"moving to next provider ({detail[:120]})")
-                        break
+                        # Only a daily/hard quota cap ("exceeded your current
+                        # quota") is pointless to retry — fall through to the
+                        # next provider. Per-minute and transient upstream
+                        # rate limits ("rate-limited") are worth waiting out.
+                        if "quota" in detail.lower():
+                            print(f"    LLM {model} daily quota exhausted (429); "
+                                  f"moving to next provider ({detail[:120]})")
+                            break
+                        print(f"    LLM {model} rate-limited (429); waiting 65s "
+                              f"and retrying ({detail[:120]})")
+                        time.sleep(65)
+                        continue
                     print(f"    LLM {model} failed: HTTP {e.code} {detail}")
                     break
                 except Exception as e:
