@@ -34,6 +34,34 @@ from datetime import datetime, timezone
 import improve  # pattern engine (v3.1) — provides all the GitHub plumbing
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
+
+
+def _load_config():
+    """Repo-level LLM config (llm-config.json next to this script).
+
+    Lets base URLs / model lists live in a JSON file instead of workflow
+    env vars, so provider changes never require touching the workflow YAML.
+    Environment variables still take precedence when present.
+    """
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "llm-config.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+CONFIG = _load_config()
+
+
+def cfg(name, default=None):
+    """Env var if set, else llm-config.json entry, else default."""
+    v = os.environ.get(name)
+    if v:
+        return v
+    return CONFIG.get(name, default)
+
+
 # LLM providers: any OpenAI-compatible chat-completions endpoints, tried in order.
 #   Provider 1: LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
 #   Provider 2: LLM2_API_KEY / LLM2_BASE_URL / LLM2_MODEL   (optional fallback)
@@ -47,12 +75,12 @@ def _provider(prefix):
     if not key:
         return None
     # `or` also guards against an empty-string variable (unset value)
-    base = os.environ.get(f"{prefix}BASE_URL") or "https://models.github.ai/inference"
+    base = cfg(f"{prefix}BASE_URL") or "https://models.github.ai/inference"
     if not base.startswith(("http://", "https://")):
         print(f"    WARNING: {prefix}BASE_URL invalid ({base!r}); using GitHub Models")
         base = "https://models.github.ai/inference"
     # LLM*_MODEL may be a comma-separated fallback list
-    raw = os.environ.get(f"{prefix}MODEL") or ""
+    raw = cfg(f"{prefix}MODEL") or ""
     models = [m.strip() for m in raw.split(",") if m.strip()] or DEFAULT_MODELS
     return {"base": base.rstrip("/"),
             "endpoint": base.rstrip("/") + "/chat/completions",
