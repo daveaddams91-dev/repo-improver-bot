@@ -35,6 +35,17 @@ import improve  # pattern engine (v3.1) — provides all the GitHub plumbing
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 
+# Optional: single combined secret "key1,key2,key3" (avoids repetitive env
+# wiring in the workflow). Split into LLM*_API_KEY if the individual vars
+# are not already set. Keys must not contain commas.
+_pk = os.environ.get("PROVIDER_KEYS", "")
+if _pk and not os.environ.get("LLM_API_KEY"):
+    _parts = [p.strip() for p in _pk.split(",") if p.strip()]
+    for _i, _k in enumerate(_parts[:3]):
+        _name = "LLM_API_KEY" if _i == 0 else f"LLM{_i + 1}_API_KEY"
+        if not os.environ.get(_name):
+            os.environ[_name] = _k
+
 
 def _load_config():
     """Repo-level LLM config (llm-config.json next to this script).
