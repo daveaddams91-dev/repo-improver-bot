@@ -71,7 +71,30 @@ def gh_patch(path, data=None):
 # ---------------------------------------------------------------------------
 # Step 1: Select the stalest repo
 # ---------------------------------------------------------------------------
-def select_repo():
+def get_pinned_repos():
+    """Repos pinned on the owner's profile — never improve these (GraphQL)."""
+    try:
+        user = gh_get("/user")
+        login = user["login"]
+        query = ('{ user(login: "%s") { pinnedItems(first: 10, types: REPOSITORY) '
+                 '{ nodes { ... on Repository { name } } } } }' % login)
+        r = requests.post("https://api.github.com/graphql",
+                          json={"query": query},
+                          headers={"Authorization": f"bearer {GH_TOKEN}"},
+                          timeout=30)
+        data = r.json()
+        pinned = {n["name"] for n in data["data"]["user"]["pinnedItems"]["nodes"]}
+        if pinned:
+            print(f"  Pinned (excluded): {', '.join(sorted(pinned))}")
+        return pinned
+    except Exception as e:
+        print(f"  (could not fetch pinned repos: {e})")
+        return set()
+
+
+def select_repo(exclude=None):
+    exclude = set(exclude or [])
+    pinned = get_pinned_repos()
     params = {
         "affiliation": "owner",
         "sort": "pushed",
@@ -80,11 +103,12 @@ def select_repo():
         "page": 1,
     }
     repos = gh_get("/user/repos", params=params)
+    skip = exclude | pinned | {"test", "repo-improver-bot",
+                              "fransen-robinson-record", "eulerian-fluid-solver"}
     for repo in repos:
         if repo.get("archived") or repo.get("fork"):
             continue
-        if repo["name"] in ("test", "repo-improver-bot",
-                            "fransen-robinson-record", "eulerian-fluid-solver"):
+        if repo["name"] in skip:
             continue
         pushed_at = datetime.fromisoformat(repo["pushed_at"].replace("Z", "+00:00"))
         if pushed_at > SEVEN_DAYS_AGO:
@@ -95,8 +119,7 @@ def select_repo():
     for repo in repos_sorted:
         if repo.get("archived") or repo.get("fork"):
             continue
-        if repo["name"] in ("test", "repo-improver-bot",
-                            "fransen-robinson-record", "eulerian-fluid-solver"):
+        if repo["name"] in skip:
             continue
         return repo
     return None
