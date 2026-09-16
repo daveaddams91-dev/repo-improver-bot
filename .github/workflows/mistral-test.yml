@@ -7,25 +7,33 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Call Mistral API
+      - name: Probe Mistral API
         env:
           MISTRAL_KEY: ${{ secrets.LLM3_API_KEY }}
         run: |
           python3 - << 'EOF'
-          import json, urllib.request, urllib.error
-          req = urllib.request.Request(
-              "https://api.mistral.ai/v1/chat/completions",
-              data=json.dumps({"model": "mistral-large-latest",
-                               "messages": [{"role": "user", "content": "Reply with exactly: OK"}],
-                               "max_tokens": 10}).encode(),
-              method="POST",
-              headers={"Authorization": "Bearer " + __import__("os").environ["MISTRAL_KEY"],
-                       "Content-Type": "application/json"})
-          try:
-              d = json.loads(urllib.request.urlopen(req, timeout=60).read())
-              print("MISTRAL_TEST_RESULT: SUCCESS via", d.get("model"))
-              print("MISTRAL_TEST_REPLY:", d["choices"][0]["message"]["content"][:50])
-          except urllib.error.HTTPError as e:
-              print("MISTRAL_TEST_RESULT: FAILED HTTP", e.code)
-              print(e.read().decode()[:300])
+          import json, os, urllib.request, urllib.error
+          KEY = os.environ["MISTRAL_KEY"]
+          def call(path, payload=None):
+              req = urllib.request.Request(
+                  "https://api.mistral.ai/v1" + path,
+                  data=json.dumps(payload).encode() if payload else None,
+                  method="POST" if payload else "GET",
+                  headers={"Authorization": "Bearer " + KEY, "Content-Type": "application/json"})
+              try:
+                  return json.loads(urllib.request.urlopen(req, timeout=60).read())
+              except urllib.error.HTTPError as e:
+                  return {"_http": e.code, "_body": e.read().decode()[:200]}
+          models = call("/models")
+          ids = sorted(m["id"] for m in models.get("data", []))
+          print("AVAILABLE_MODELS:", json.dumps(ids))
+          for m in ids:
+              if any(k in m for k in ("small", "nemo", "devstral", "codestral", "medium")):
+                  r = call("/chat/completions", {"model": m,
+                      "messages": [{"role": "user", "content": "Reply with exactly: OK"}],
+                      "max_tokens": 10})
+                  if "_http" in r:
+                      print(f"PROBE {m}: HTTP {r['_http']} {r['_body'][:80]}")
+                  else:
+                      print(f"PROBE {m}: SUCCESS ->", r["choices"][0]["message"]["content"][:20])
           EOF
