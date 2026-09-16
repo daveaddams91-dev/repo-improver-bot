@@ -96,10 +96,12 @@ def call_llm(messages):
                         detail = e.read().decode()[:200]
                     except Exception:
                         pass
-                    if e.code == 429 and attempt < 2:
-                        print(f"    LLM {model} rate-limited (429); waiting 65s "
+                    if e.code in (429, 503) and attempt < 2:
+                        wait = 65 if e.code == 429 else 30  # rate limit vs overload
+                        why = "rate-limited (429)" if e.code == 429 else "overloaded (503)"
+                        print(f"    LLM {model} {why}; waiting {wait}s "
                               f"and retrying ({detail[:120]})")
-                        time.sleep(65)
+                        time.sleep(wait)
                         continue
                     print(f"    LLM {model} failed: HTTP {e.code} {detail}")
                     break
