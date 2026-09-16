@@ -45,7 +45,11 @@ def _provider(prefix):
     key = os.environ.get(f"{prefix}API_KEY")
     if not key:
         return None
-    base = os.environ.get(f"{prefix}BASE_URL", "https://models.github.ai/inference")
+    # `or` also guards against an empty-string variable (unset value)
+    base = os.environ.get(f"{prefix}BASE_URL") or "https://models.github.ai/inference"
+    if not base.startswith(("http://", "https://")):
+        print(f"    WARNING: {prefix}BASE_URL invalid ({base!r}); using GitHub Models")
+        base = "https://models.github.ai/inference"
     models = [m for m in [os.environ.get(f"{prefix}MODEL")] if m] or DEFAULT_MODELS
     return {"endpoint": base.rstrip("/") + "/chat/completions",
             "token": key, "models": models}
@@ -83,17 +87,17 @@ def call_llm(messages):
                     "temperature": 0.1,
                     "max_tokens": 16000,
                 }).encode()
-                req = urllib.request.Request(
-                    endpoint,
-                    data=payload,
-                    method="POST",
-                    headers={
-                        "Authorization": f"Bearer {token}",
-                        "Content-Type": "application/json",
-                        # Cloudflare (Groq and others) blocks urllib's default UA
-                        "User-Agent": "repo-improver-bot/1.0",
-                    })
                 try:
+                    req = urllib.request.Request(
+                        endpoint,
+                        data=payload,
+                        method="POST",
+                        headers={
+                            "Authorization": f"Bearer {token}",
+                            "Content-Type": "application/json",
+                            # Cloudflare (Groq and others) blocks urllib's default UA
+                            "User-Agent": "repo-improver-bot/1.0",
+                        })
                     with urllib.request.urlopen(req, timeout=180) as resp:
                         data = json.loads(resp.read())
                     content = data["choices"][0]["message"]["content"]
