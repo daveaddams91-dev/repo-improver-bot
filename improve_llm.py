@@ -58,41 +58,54 @@ TODAY = datetime.now(timezone.utc).strftime("%Y%m%d")
 # LLM interaction
 # ---------------------------------------------------------------------------
 def call_llm(messages):
-    """Call GitHub Models chat completions. Returns content string or None."""
+    """Call the configured OpenAI-compatible chat completions endpoint.
+
+    Retries up to twice on HTTP 429 (provider rate limit, e.g. Groq free tier
+    tokens-per-minute), waiting 65s for the window to reset. Returns content
+    string or None.
+    """
     for token in LLM_TOKENS:
         for model in MODELS_TO_TRY:
-            payload = json.dumps({
-                "model": model,
-                "messages": messages,
-                "temperature": 0.1,
-                "max_tokens": 16000,
-            }).encode()
-            req = urllib.request.Request(
-                MODELS_ENDPOINT,
-                data=payload,
-                method="POST",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json",
-                    # Cloudflare (Groq and others) blocks urllib's default UA
-                    "User-Agent": "repo-improver-bot/1.0",
-                })
-            try:
-                with urllib.request.urlopen(req, timeout=180) as resp:
-                    data = json.loads(resp.read())
-                content = data["choices"][0]["message"]["content"]
-                if content:
-                    print(f"    LLM responded via {model}")
-                    return content
-            except urllib.error.HTTPError as e:
-                detail = ""
+            for attempt in range(3):  # initial + up to two rate-limit retries
+                payload = json.dumps({
+                    "model": model,
+                    "messages": messages,
+                    "temperature": 0.1,
+                    "max_tokens": 16000,
+                }).encode()
+                req = urllib.request.Request(
+                    MODELS_ENDPOINT,
+                    data=payload,
+                    method="POST",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json",
+                        # Cloudflare (Groq and others) blocks urllib's default UA
+                        "User-Agent": "repo-improver-bot/1.0",
+                    })
                 try:
-                    detail = e.read().decode()[:200]
-                except Exception:
-                    pass
-                print(f"    LLM {model} failed: HTTP {e.code} {detail}")
-            except Exception as e:
-                print(f"    LLM {model} failed: {e}")
+                    with urllib.request.urlopen(req, timeout=180) as resp:
+                        data = json.loads(resp.read())
+                    content = data["choices"][0]["message"]["content"]
+                    if content:
+                        print(f"    LLM responded via {model}")
+                        return content
+                except urllib.error.HTTPError as e:
+                    detail = ""
+                    try:
+                        detail = e.read().decode()[:200]
+                    except Exception:
+                        pass
+                    if e.code == 429 and attempt < 2:
+                        print(f"    LLM {model} rate-limited (429); waiting 65s "
+                              f"and retrying ({detail[:120]})")
+                        time.sleep(65)
+                        continue
+                    print(f"    LLM {model} failed: HTTP {e.code} {detail}")
+                    break
+                except Exception as e:
+                    print(f"    LLM {model} failed: {e}")
+                    break
     return None
 
 
