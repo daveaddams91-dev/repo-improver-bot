@@ -50,9 +50,36 @@ def _provider(prefix):
     if not base.startswith(("http://", "https://")):
         print(f"    WARNING: {prefix}BASE_URL invalid ({base!r}); using GitHub Models")
         base = "https://models.github.ai/inference"
-    models = [m for m in [os.environ.get(f"{prefix}MODEL")] if m] or DEFAULT_MODELS
-    return {"endpoint": base.rstrip("/") + "/chat/completions",
+    # LLM*_MODEL may be a comma-separated fallback list
+    raw = os.environ.get(f"{prefix}MODEL") or ""
+    models = [m.strip() for m in raw.split(",") if m.strip()] or DEFAULT_MODELS
+    return {"base": base.rstrip("/"),
+            "endpoint": base.rstrip("/") + "/chat/completions",
             "token": key, "models": models}
+
+
+def _discover_models(provider):
+    """Fetch the provider's live model list; rank coding-capable candidates.
+
+    Used to self-heal when a configured model is retired (HTTP 404).
+    Prefers free-tier models (OpenRouter ':free' suffix) when present.
+    """
+    try:
+        req = urllib.request.Request(
+            provider["base"] + "/models",
+            headers={"Authorization": f"Bearer {provider['token']}",
+                     "User-Agent": "repo-improver-bot/1.0"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            ids = [m["id"] for m in json.loads(resp.read()).get("data", [])]
+        pool = [i for i in ids if ":free" in i] or ids
+        keywords = ("glm", "deepseek", "qwen", "llama", "mistral", "gpt",
+                    "kimi", "code", "nemotron", "inkling", "laguna", "nex")
+        ranked = [i for i in pool if any(k in i.lower() for k in keywords)] or pool[:5]
+        seen = set(provider["models"])
+        return [i for i in ranked if i not in seen][:3]
+    except Exception as e:
+        print(f"    (live model discovery failed: {e})")
+        return []
 
 
 PROVIDERS = [p for p in (_provider("LLM_"), _provider("LLM2_")) if p]
@@ -115,6 +142,16 @@ def call_llm(messages):
                               f"and retrying ({detail[:120]})")
                         time.sleep(30)
                         continue
+                    if e.code == 404 and not provider.get("discovered"):
+                        # Model retired/unavailable — self-heal by switching to a
+                        # live model from the provider's own catalog.
+                        provider["discovered"] = True
+                        found = _discover_models(provider)
+                        if found:
+                            print(f"    LLM {model} retired (404); "
+                                  f"auto-switching to: {', '.join(found)}")
+                            provider["models"].extend(found)
+                        break
                     if e.code == 429 and attempt < 6:
                         # Only a daily/hard quota cap ("exceeded your current
                         # quota") is pointless to retry — fall through to the
