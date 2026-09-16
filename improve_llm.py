@@ -66,7 +66,7 @@ def call_llm(messages):
     """
     for token in LLM_TOKENS:
         for model in MODELS_TO_TRY:
-            for attempt in range(3):  # initial + up to two rate-limit retries
+            for attempt in range(7):  # initial + up to six 429/503 retries
                 payload = json.dumps({
                     "model": model,
                     "messages": messages,
@@ -96,7 +96,7 @@ def call_llm(messages):
                         detail = e.read().decode()[:200]
                     except Exception:
                         pass
-                    if e.code in (429, 503) and attempt < 2:
+                    if e.code in (429, 503) and attempt < 6:
                         wait = 65 if e.code == 429 else 30  # rate limit vs overload
                         why = "rate-limited (429)" if e.code == 429 else "overloaded (503)"
                         print(f"    LLM {model} {why}; waiting {wait}s "
