@@ -2,7 +2,7 @@ name: Repo Improver Bot
 
 on:
   schedule:
-    # Every 2 hours, 24/7 (= 12 runs/day; ~06:00-04:00 IST)
+    # Every 2 hours, 24/7 (12 runs/day)
     - cron: "30 */2 * * *"
   workflow_dispatch:
 
@@ -31,15 +31,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
           LLM_TOKEN: ${{ github.token }}
-          LLM_API_KEY: ${{ secrets.LLL_API_KEY }}
-          LLM_BASE_URL: ${{ vars.LLL_BASE_URL }}
-          LLM_MODEL: ${{ vars.LLM_MODEL }}
-          LLS2_API_KEY: ${{ secrets.LLN2_API_KEY }}
-          LLM2_BASE_URL: ${{ vars.LLM2_BASE_URL }}
-          LLM2_MODEL: ${{ vars.LLM2_MODEL }}
-          LLM3_API_KEY: ${{ secrets.LLS3_API_KEY }}
-          LLO3_BASE_URL: ${{ vars.LLO3_BASE_URL }}
-          LLO3_MODEL: ${{ vars.LLO3_MODEL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM2_API_KEY: ${{ secrets.LLM2_API_KEY }}
+          LLM3_API_KEY: ${{ secrets.LLN3_API_KEY }}
           MAX_REPOS_PER_RUN: "2"
         run: python improve_llm.py
 
