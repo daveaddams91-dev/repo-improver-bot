@@ -274,8 +274,8 @@ def main():
     llm_summaries = []
     python_files = []
     try:
-        tree = improve.get_repo_tree(owner, repo_name, default_branch)
-        python_files = [e["path"] for e in tree.get("tree", [])
+        _, tree_data = improve.get_repo_tree(owner, repo_name, default_branch)
+        python_files = [e["path"] for e in tree_data.get("tree", [])
                         if e["path"].endswith(".py") and "/" not in e["path"]]
     except Exception as e:
         print(f"  Could not list repo files: {e}")
