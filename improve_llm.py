@@ -34,23 +34,32 @@ from datetime import datetime, timezone
 import improve  # pattern engine (v3.1) — provides all the GitHub plumbing
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
-# LLM provider: any OpenAI-compatible chat-completions endpoint.
-#   LLM_API_KEY  — explicit API key for the provider (e.g. Groq/OpenRouter)
-#   LLM_BASE_URL — provider base URL (default: GitHub Models)
-#   LLM_MODEL    — model id (default: tries both models below)
+# LLM providers: any OpenAI-compatible chat-completions endpoints, tried in order.
+#   Provider 1: LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
+#   Provider 2: LLM2_API_KEY / LLM2_BASE_URL / LLM2_MODEL   (optional fallback)
 # Falls back to LLM_TOKEN / GH_TOKEN against GitHub Models when no key is set.
-LLM_API_KEY = os.environ.get("LLM_API_KEY")
-LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://models.github.ai/inference")
-MODELS_ENDPOINT = LLM_BASE_URL.rstrip("/") + "/chat/completions"
 DEFAULT_MODELS = ["openai/gpt-4.1-mini", "meta/Llama-3.3-70B-Instruct"]
-if LLM_API_KEY:
-    LLM_TOKENS = [LLM_API_KEY]
-    MODELS_TO_TRY = [m for m in [os.environ.get("LLM_MODEL")] if m] or DEFAULT_MODELS
-else:
-    LLM_TOKENS = [t for t in (os.environ.get("LLM_TOKEN"), GH_TOKEN) if t]
-    MODELS_TO_TRY = [m for m in [os.environ.get("LLM_MODEL")] if m] or DEFAULT_MODELS
+
+
+def _provider(prefix):
+    key = os.environ.get(f"{prefix}API_KEY")
+    if not key:
+        return None
+    base = os.environ.get(f"{prefix}BASE_URL", "https://models.github.ai/inference")
+    models = [m for m in [os.environ.get(f"{prefix}MODEL")] if m] or DEFAULT_MODELS
+    return {"endpoint": base.rstrip("/") + "/chat/completions",
+            "token": key, "models": models}
+
+
+PROVIDERS = [p for p in (_provider("LLM_"), _provider("LLM2_")) if p]
+if not PROVIDERS:
+    _tokens = [t for t in (os.environ.get("LLM_TOKEN"), GH_TOKEN) if t]
+    PROVIDERS = [{"endpoint": "https://models.github.ai/inference/chat/completions",
+                  "token": t, "models": DEFAULT_MODELS} for t in _tokens]
+
 MAX_FILE_BYTES = 60_000
 MAX_FILES = 3
+MAX_REPOS_PER_RUN = int(os.environ.get("MAX_REPOS_PER_RUN", "2"))
 TODAY = datetime.now(timezone.utc).strftime("%Y%m%d")
 
 
@@ -58,14 +67,15 @@ TODAY = datetime.now(timezone.utc).strftime("%Y%m%d")
 # LLM interaction
 # ---------------------------------------------------------------------------
 def call_llm(messages):
-    """Call the configured OpenAI-compatible chat completions endpoint.
+    """Call the configured OpenAI-compatible chat-completions providers in order.
 
-    Retries up to twice on HTTP 429 (provider rate limit, e.g. Groq free tier
-    tokens-per-minute), waiting 65s for the window to reset. Returns content
-    string or None.
+    Within each provider, retries up to six times on HTTP 429 (rate limit —
+    wait 65s) or 503 (transient overload — wait 30s) before moving on to the
+    next provider. Returns content string or None.
     """
-    for token in LLM_TOKENS:
-        for model in MODELS_TO_TRY:
+    for provider in PROVIDERS:
+        endpoint, token = provider["endpoint"], provider["token"]
+        for model in provider["models"]:
             for attempt in range(7):  # initial + up to six 429/503 retries
                 payload = json.dumps({
                     "model": model,
@@ -74,7 +84,7 @@ def call_llm(messages):
                     "max_tokens": 16000,
                 }).encode()
                 req = urllib.request.Request(
-                    MODELS_ENDPOINT,
+                    endpoint,
                     data=payload,
                     method="POST",
                     headers={
@@ -311,13 +321,25 @@ def main():
           f"{datetime.now(timezone.utc).isoformat()}")
     print("=" * 60)
 
-    repo = improve.select_repo()
-    if not repo:
-        print("No eligible repos found to improve.")
-        improve.write_summary(None, None, None, [], "no_repos")
-        improve.keepalive()
-        return
+    done = set()
+    for i in range(MAX_REPOS_PER_RUN):
+        repo = improve.select_repo(exclude=done)
+        if not repo:
+            if i == 0:
+                print("No eligible repos found to improve.")
+                improve.write_summary(None, None, None, [], "no_repos")
+                improve.keepalive()
+            else:
+                print("\nNo more eligible repos this run.")
+            return
+        try:
+            process_repo(repo)
+        except Exception as e:
+            print(f"\nError processing {repo['full_name']}: {e} — continuing")
+        done.add(repo["name"])
 
+
+def process_repo(repo):
     repo_name = repo["name"]
     repo_full = repo["full_name"]
     owner = repo["owner"]["login"]
