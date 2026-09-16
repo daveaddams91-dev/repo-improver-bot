@@ -106,13 +106,23 @@ def call_llm(messages):
                         detail = e.read().decode()[:200]
                     except Exception:
                         pass
-                    if e.code in (429, 503) and attempt < 6:
-                        wait = 65 if e.code == 429 else 30  # rate limit vs overload
-                        why = "rate-limited (429)" if e.code == 429 else "overloaded (503)"
-                        print(f"    LLM {model} {why}; waiting {wait}s "
+                    if e.code == 503 and attempt < 6:
+                        print(f"    LLM {model} overloaded (503); waiting 30s "
                               f"and retrying ({detail[:120]})")
-                        time.sleep(wait)
+                        time.sleep(30)
                         continue
+                    if e.code == 429 and attempt < 6:
+                        # Per-minute rate limits are worth waiting out; a daily
+                        # quota cap ("exceeded your current quota") is not —
+                        # fall through to the next provider immediately.
+                        if "per-minute" in detail.lower() or "rate limit" in detail.lower():
+                            print(f"    LLM {model} rate-limited (429); waiting 65s "
+                                  f"and retrying ({detail[:120]})")
+                            time.sleep(65)
+                            continue
+                        print(f"    LLM {model} daily quota exhausted (429); "
+                              f"moving to next provider ({detail[:120]})")
+                        break
                     print(f"    LLM {model} failed: HTTP {e.code} {detail}")
                     break
                 except Exception as e:
