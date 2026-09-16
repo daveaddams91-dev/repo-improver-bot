@@ -127,6 +127,14 @@ def parse_llm_json(content):
     try:
         return json.loads(text[start:end + 1])
     except json.JSONDecodeError:
+        # Repair common LLM JSON flaws and retry:
+        # 1) invalid backslash escapes (e.g. regex '\d' emitted raw inside a string)
+        repaired = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text[start:end + 1])
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            pass
+        # 2) truncated response (missing closing quotes/braces): bail out
         return None
 
 
@@ -188,7 +196,9 @@ def run_tests(improved_code, filename, tests_code):
         tests_dir = os.path.join(tmp, "tests")
         os.makedirs(tests_dir)
         with open(os.path.join(tests_dir, "test_module.py"), "w", encoding="utf-8") as f:
-            f.write(tests_code.replace("MODULE_FILENAME", os.path.basename(filename)))
+            # Substitute the ABSOLUTE module path — tests may chdir to tmp fixtures
+            # before loading the module, so a bare basename would break.
+            f.write(tests_code.replace("MODULE_FILENAME", module_path))
         try:
             r = subprocess.run(
                 [sys.executable, "-m", "pytest", "-x", "-q", tests_dir],
@@ -225,58 +235,71 @@ The current file content:
 
 
 def llm_improve_file(repo_name, filename, source, description=None, failure_feedback=None):
-    """Ask the LLM to improve one file. Returns dict or None."""
+    """Ask the LLM to improve one file. Returns dict or None.
+
+    Retries up to 3 times total: JSON parse failures and validation failures
+    (syntax errors, suspicious shrink) are fed back to the LLM for repair,
+    in addition to the test-failure feedback supplied by the caller.
+    """
     if len(source.encode()) > MAX_FILE_BYTES:
         print(f"    Skipping {filename} (too large for LLM context)")
         return None
 
     desc = f"Repository description: {description}" if description else ""
-    prompt = PROMPT_TEMPLATE.format(
+    base_prompt = PROMPT_TEMPLATE.format(
         filename=filename, repo_name=repo_name,
         description_line=desc, source=source)
-    if failure_feedback:
-        prompt += ("\n\nIMPORTANT: your previous attempt at improving this file produced "
-                   "an improvement or tests that FAILED. Here is the pytest output:\n\n"
-                   + failure_feedback[-3000:]
-                   + "\n\nFix whichever was wrong — the improved code or the tests — "
-                     "and return the same JSON structure. The improved code must still "
-                     "genuinely improve the original, and the tests must pass against it. "
-                     "Before changing the code, check whether the failing TEST assertion "
-                     "is what's wrong — e.g. it assumes no leading zero in digit strings "
-                     "(OEIS convention keeps it) or misuses MODULE_FILENAME as an identifier.")
-    messages = [
-        {"role": "system", "content": (
-            "You are an expert Python engineer who improves code while preserving "
-            "its external behavior exactly. You always return valid JSON.")},
-        {"role": "user", "content": prompt},
-    ]
-    content = call_llm(messages)
-    if not content:
-        return None
-    parsed = parse_llm_json(content)
-    if not parsed or "improved_code" not in parsed:
-        print(f"    Could not parse LLM JSON response for {filename}")
-        return None
 
-    improved = parsed["improved_code"]
-    summary = parsed.get("summary") or "LLM improvement"
-    tests = parsed.get("tests")
-    if isinstance(tests, str) and tests.strip().lower() in ("null", "none"):
-        tests = None
+    feedback = failure_feedback
+    for attempt in range(3):
+        prompt = base_prompt
+        if feedback:
+            prompt += ("\n\nIMPORTANT: your previous attempt at improving this file FAILED. "
+                       "Details:\n\n" + feedback[-3000:]
+                       + "\n\nFix whichever was wrong — the improved code, the tests, or the "
+                         "JSON formatting — and return the same JSON structure. The improved "
+                         "code must still genuinely improve the original, and the tests must "
+                         "pass against it. Beware stray backslashes in the code (e.g. a "
+                         "literal `\\def` instead of `def`); never emit them.")
+        messages = [
+            {"role": "system", "content": (
+                "You are an expert Python engineer who improves code while preserving "
+                "its external behavior exactly. You always return valid JSON.")},
+            {"role": "user", "content": prompt},
+        ]
+        content = call_llm(messages)
+        if not content:
+            return None
+        parsed = parse_llm_json(content)
+        if not parsed or "improved_code" not in parsed or not parsed["improved_code"]:
+            print(f"    Could not parse LLM JSON response for {filename} "
+                  f"(attempt {attempt + 1})")
+            feedback = ("Your previous response could not be parsed as JSON. Return ONLY "
+                        "a valid JSON object with keys improved_code, summary, tests. Make "
+                        "sure every backslash inside code strings is properly escaped as \\\\.")
+            continue
 
-    ok, reason = validate_improvement(source, improved)
-    if not ok:
-        print(f"    Validation failed for {filename}: {reason}")
-        return None
-
-    if tests:
-        try:
-            ast.parse(tests)
-        except SyntaxError:
-            print(f"    Tests have syntax errors; dropping tests for {filename}")
+        improved = parsed["improved_code"]
+        summary = parsed.get("summary") or "LLM improvement"
+        tests = parsed.get("tests")
+        if isinstance(tests, str) and tests.strip().lower() in ("null", "none"):
             tests = None
 
-    return {"improved_code": improved, "summary": summary, "tests": tests}
+        ok, reason = validate_improvement(source, improved)
+        if not ok:
+            print(f"    Validation failed for {filename} (attempt {attempt + 1}): {reason}")
+            feedback = f"Your improved code failed validation: {reason}"
+            continue
+
+        if tests:
+            try:
+                ast.parse(tests)
+            except SyntaxError as e:
+                print(f"    Tests have syntax errors; dropping tests for {filename}: {e}")
+                tests = None
+
+        return {"improved_code": improved, "summary": summary, "tests": tests}
+    return None
 
 
 # ---------------------------------------------------------------------------
