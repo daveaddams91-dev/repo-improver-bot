@@ -404,6 +404,14 @@ def main():
     print(f"Autonomous run complete. Repositories improved: {processed_count}")
     print("=" * 65)
 
+    summary_data = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "repositories_improved": processed_count,
+        "mode": IMPROVEMENT_MODE_ENV,
+    }
+    with open("run_summary.json", "w", encoding="utf-8") as f:
+        json.dump(summary_data, f, indent=2)
+
     # Keep-alive heartbeat to prevent GitHub Actions auto-disable
     improve.keepalive()
 
