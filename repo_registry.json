@@ -371,6 +371,15 @@
     "pr_history": [],
     "stages_completed": []
   },
+  "orbit-engine": {
+    "description": "High-precision orbital propagators, Lambert targeting, and transfer optimization for astrodynamics",
+    "domain": "aerospace_orbital",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "terrain-erosion-engine": {
     "domain": "general_python",
     "improvements_count": 0,
