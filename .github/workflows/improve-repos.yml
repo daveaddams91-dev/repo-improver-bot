@@ -5,12 +5,24 @@ on:
     # Every 2 hours, 24/7 (12 runs/day)
     - cron: "30 */2 * * *"
   workflow_dispatch:
+    inputs:
+      target_repo:
+        description: "Target a specific repository (e.g. Universal-Parabolic-Constant, Tokamak-Py), or leave empty for auto-selection"
+        required: false
+        default: ""
+      max_repos:
+        description: "Maximum number of repos to improve in this run"
+        required: false
+        default: "2"
+      mode:
+        description: "Improvement focus: auto | tests | benchmarks | optimize | docs"
+        required: false
+        default: "auto"
 
 permissions:
   contents: write
   pull-requests: write
   issues: write
-  models: read
 
 jobs:
   improve:
@@ -18,22 +30,43 @@ jobs:
     steps:
       - name: Checkout bot repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_IMPROVER_TOKEN || github.token }}
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
-        run: pip install requests pytest gmpy2 mpmath
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest gmpy2 mpmath numpy
 
       - name: Run repo improver
         env:
           GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
-          LLM_TOKEN: ${{ github.token }}
           PROVIDER_KEYS: ${{ secrets.PROVIDER_KEYS }}
-          MAX_REPOS_PER_RUN: "2"
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM2_API_KEY: ${{ secrets.LLM2_API_KEY }}
+          LLM3_API_KEY: ${{ secrets.LLM3_API_KEY }}
+          MAX_REPOS_PER_RUN: ${{ inputs.max_repos || '2' }}
+          TARGET_REPO: ${{ inputs.target_repo || '' }}
+          IMPROVEMENT_MODE: ${{ inputs.mode || 'auto' }}
         run: python improve_llm.py
+
+      - name: Commit state updates & heartbeat
+        if: always()
+        run: |
+          git config user.name "repo-improver-bot[bot]"
+          git config user.email "144442360+Raj123-0[bot]@users.noreply.github.com"
+          git add -A repo_registry.json LAST_RUN.md || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update repo registry and keep-alive heartbeat"
+            git push origin main
+          fi
 
       - name: Upload run summary
         if: always()

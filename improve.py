@@ -21,8 +21,14 @@ import requests
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 if not GH_TOKEN:
-    print("ERROR: GH_TOKEN environment variable not set.")
-    sys.exit(1)
+    try:
+        import subprocess
+        res = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=5)
+        if res.returncode == 0 and res.stdout.strip():
+            GH_TOKEN = res.stdout.strip()
+            os.environ["GH_TOKEN"] = GH_TOKEN
+    except Exception:
+        pass
 
 GH_API = "https://api.github.com"
 HEADERS = {
@@ -48,6 +54,9 @@ def gh_post(path, data=None):
     r = requests.post(url, headers=HEADERS, json=data or {})
     if r.status_code in (200, 201):
         return r.json()
+    if r.status_code == 403:
+        print(f"  [GitHub API] Note: 403 on POST {path} (token lacks scope; skipping)")
+        return None
     print(f"  POST {path} -> {r.status_code}: {r.text[:200]}")
     return None
 
@@ -56,6 +65,9 @@ def gh_put(path, data=None):
     r = requests.put(url, headers=HEADERS, json=data or {})
     if r.status_code in (200, 204):
         return r.json() if r.text else {}
+    if r.status_code == 403:
+        print(f"  [GitHub API] Note: 403 on PUT {path} (token lacks scope; skipping)")
+        return None
     print(f"  PUT {path} -> {r.status_code}: {r.text[:200]}")
     return None
 
@@ -64,6 +76,9 @@ def gh_patch(path, data=None):
     r = requests.patch(url, headers=HEADERS, json=data or {})
     if r.status_code in (200, 204):
         return r.json() if r.text else {}
+    if r.status_code == 403:
+        print(f"  [GitHub API] Note: 403 on PATCH {path} (token lacks scope; skipping)")
+        return None
     print(f"  PATCH {path} -> {r.status_code}: {r.text[:200]}")
     return None
 
@@ -489,8 +504,10 @@ class CodeAnalyzer:
                             return_types.add("Any")
                     elif isinstance(val.func, ast.Attribute):
                         return_types.add("Any")
-        if len(return_types) == 0:
-            return None  # No return or only bare return
+        if "Any" in return_types and len(return_types) > 1:
+            return_types.remove("Any")
+        if return_types == {"Any"} or len(return_types) == 0:
+            return None  # No return or ambiguous/untyped return
         if len(return_types) == 1:
             return return_types.pop()
         if return_types == {"None"}:
@@ -1750,90 +1767,11 @@ def improve_python_file(content, filepath):
 # README generation (professional with badges)
 # ---------------------------------------------------------------------------
 def generate_readme(repo_name, description, python_files, has_requirements):
-    """Generate a professional README with badges."""
-    clean_name = repo_name.replace("-", " ").replace("_", " ").title()
-    readme = f"""# {clean_name}
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-
-{description or f'A Python project for {clean_name.lower()}.'}
-
-## Overview
-
-{clean_name} is a Python-based project that leverages mathematical computing
-techniques for high-precision calculations. It uses optimized algorithms and
-parallel processing for efficient computation.
-
-## Features
-
-- High-precision mathematical computation
-- Parallel processing with multiprocessing
-- OEIS-compatible output formatting
-- Configurable precision targets
-
-## Prerequisites
-
-- Python 3.8 or higher
-"""
-    # Add dependency info
-    if has_requirements:
-        readme += """
-### Dependencies
-
-See `requirements.txt` for the full list. Key dependencies:
-
-- `mpmath` — arbitrary-precision floating-point arithmetic
-- `gmpy2` — C-accelerated mathematical operations
-"""
-
-    readme += f"""
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Raj123-0/{repo_name}.git
-   cd {repo_name}
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-"""
-
-    # Add usage section with actual file name
-    main_file = python_files[0].split("/")[-1] if python_files else "main.py"
-    readme += f"""
-## Usage
-
-Run the main script with desired precision:
-
-```bash
-python "{main_file}" --digits 1000
-```
-
-### Command-line options
-
-```bash
-python "{main_file}" --help
-```
-
-## Output
-
-The script generates:
-- A `.txt` file with the computed digits
-- An OEIS b-file format output for sequence integration
-
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
-## Author
-
-**Raj123-0** — [GitHub Profile](https://github.com/Raj123-0)
-"""
-    return readme
+    """Generate a professional, domain-aware README with badges."""
+    from core.registry import detect_domain
+    from core.domain_improvers import generate_domain_readme
+    domain = detect_domain(repo_name, description=description or "")
+    return generate_domain_readme(domain, repo_name, description or "", python_files, has_requirements)
 
 
 def improve_readme(content, repo_info, python_files):
@@ -1903,8 +1841,12 @@ def analyze_and_improve(repo_info):
             has_requirements = True
         if lower == "license" or lower == "license.md" or lower == "license.txt":
             has_license = True
-        if lower.endswith(".py") and not lower.startswith("test"):
-            python_files.append(path)
+        if lower.endswith(".py"):
+            parts = [p.lower() for p in path.split("/")]
+            if any(p.startswith(".") or p in ("venv", "env", "__pycache__", "build", "dist", "site-packages") for p in parts):
+                continue
+            if not any(p.startswith("test") for p in parts):
+                python_files.append(path)
 
     # --- Missing .gitignore ---
     if not has_gitignore:
