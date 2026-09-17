@@ -1,0 +1,381 @@
+{
+  "AegisCrypt": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Ap-ry-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Artin-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Brun-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Cahen-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Catalan-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Chudnovsky-Pi-Engine": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Cookie-Manager-main": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Dottie-Number": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Erdos-Borwein-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Euler-Mascheroni-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Euler-Number": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Feigenbaum-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Gauss-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Gelfond-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Gelfond-Schneider-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Glaisher-Kinkelin-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Golden-Ratio": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Gompertz-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Khinchin-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Laplace-Limit": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Lemniscate-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Lieb-Square-Ice-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Meissel-Mertens-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Omega-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Plastic-Ratio": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Raj123-0": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Ramanujan-Soldner-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "RationalLLL": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Robbins-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "ScholarlyAI": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Sierpinski-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Silver-Ratio": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "StegoCrypt-Desktop": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Supergolden-Ratio": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "The-Golomb-Dickman-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Theodorus-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Tokamak-Py": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Tribonacci-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Universal-Parabolic-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Viswanath-s-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Zeta2-Constant": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "Zeta5-Constant": {
+    "description": "",
+    "domain": "math_constant_oeis",
+    "improvements_count": 1,
+    "language": "Python",
+    "last_improved_at": "2026-09-17T07:43:28.107754+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/Raj123-0/Zeta5-Constant/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (7 files)",
+        "timestamp": "2026-09-17T07:43:28.107754+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
+  },
+  "avalanche-graph-dynamics": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "bounty-math-solver": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "check": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "dev-toolkit": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "havn": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "mathrepl": {
+    "description": "",
+    "domain": "general_python",
+    "improvements_count": 1,
+    "language": "Python",
+    "last_improved_at": "2026-09-17T07:44:07.251227+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/Raj123-0/mathrepl/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (8 files)",
+        "timestamp": "2026-09-17T07:44:07.251227+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
+  },
+  "numlang": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "terrain-erosion-engine": {
+    "domain": "general_python",
+    "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  }
+}
