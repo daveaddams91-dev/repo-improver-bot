@@ -373,6 +373,10 @@ def main():
     ]
 
     print(f"Found {len(eligible)} eligible repositories for autonomous improvement.")
+    for r in eligible:
+        domain = detect_domain(r["name"], r.get("description", ""))
+        REGISTRY.update_repo_info(r["name"], domain, r.get("description", ""))
+    REGISTRY.save()
 
     processed_count = 0
     excluded_names: set[str] = set()
