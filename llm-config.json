@@ -1,8 +1,16 @@
 {
   "LLM_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai",
-  "LLM_MODEL": "gemini-2.0-flash,gemini-1.5-flash,gemini-2.5-flash",
-  "LLM2_BASE_URL": "https://openrouter.ai/api/v1",
-  "LLM2_MODEL": "qwen/qwen-2.5-coder-32b-instruct,deepseek/deepseek-chat,meta-llama/llama-3.3-70b-instruct,z-ai/glm-5.2:free,cohere/north-mini-code:free",
+  "LLM_MODEL": "gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash,gemini-1.5-flash",
+  "GROQ_BASE_URL": "https://api.groq.com/openai/v1",
+  "GROQ_MODEL": "qwen-2.5-coder-32b,llama-3.3-70b-versatile,openai/gpt-oss-120b,qwen/qwen3.6-27b",
   "LLM3_BASE_URL": "https://api.mistral.ai/v1",
-  "LLM3_MODEL": "codestral-latest,mistral-small-latest,mistral-large-latest"
+  "LLM3_MODEL": "codestral-latest,mistral-small-latest,mistral-medium-latest,mistral-large-latest",
+  "LLM2_BASE_URL": "https://openrouter.ai/api/v1",
+  "LLM2_MODEL": "openrouter/free,qwen/qwen-2.5-coder-32b-instruct,deepseek/deepseek-chat,meta-llama/llama-3.3-70b-instruct,stepfun/step-3.7-flash:free,nvidia/nemotron-3-super-120b-a12b:free,cohere/north-mini-code:free",
+  "ZAI_BASE_URL": "https://api.z.ai/api/paas/v4",
+  "ZAI_MODEL": "glm-4.7-flash,glm-4.5-flash",
+  "COHERE_BASE_URL": "https://api.cohere.com/v2",
+  "COHERE_MODEL": "command-r-plus,command-r,command-a",
+  "KILO_BASE_URL": "https://api.kilo.ai/api/gateway",
+  "KILO_MODEL": "kilo-auto/free,nvidia/nemotron-3-ultra-550b-a55b:free,cohere/north-mini-code:free,stepfun/step-3.7-flash:free"
 }

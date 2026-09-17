@@ -1,7 +1,13 @@
-"""Resilient Multi-Provider LLM Router with Fast Failover and JSON Repair.
+"""Resilient Multi-Provider LLM Router with Fast Failover, Keyless Fallback, and JSON Repair.
 
-Supports Google Gemini, Mistral AI, and OpenRouter with zero long-sleep stalls
-and robust schema-validated responses.
+Integrates providers from awesome-free-llm-apis:
+- Google Gemini (Free tier, 1,500 RPD)
+- Groq (Ultra-fast LPU, 1,000 RPD)
+- Mistral AI (Codestral & Small, free credits)
+- OpenRouter (Free models router & community models)
+- Z.AI / Zhipu (GLM-4.7-Flash permanent free tier)
+- Cohere (Command-R series free trial)
+- Kilo Code (Universal zero-key fallback, 200 req/hr)
 """
 
 from __future__ import annotations
@@ -32,81 +38,145 @@ def load_config() -> dict[str, Any]:
 
 
 class LLMRouter:
-    """Manages multi-provider LLM calls with instant failover."""
+    """Manages tiered multi-provider LLM calls with instant failover and keyless fallback."""
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None, enable_keyless_fallback: bool = True):
         self.config = config if config is not None else load_config()
+        self.enable_keyless_fallback = enable_keyless_fallback
         self.providers: list[dict[str, Any]] = self._init_providers()
 
     def _init_providers(self) -> list[dict[str, Any]]:
-        # Check combined PROVIDER_KEYS first if individual keys aren't provided
+        # Map combined PROVIDER_KEYS into individual vars if needed
         pk = os.environ.get("PROVIDER_KEYS", "").strip()
-        if pk and not os.environ.get("LLM_API_KEY"):
+        if pk:
             parts = [p.strip() for p in pk.split(",") if p.strip()]
-            for idx, key in enumerate(parts[:3]):
-                var_name = "LLM_API_KEY" if idx == 0 else f"LLM{idx + 1}_API_KEY"
-                if not os.environ.get(var_name):
-                    os.environ[var_name] = key
+            var_names = [
+                "LLM_API_KEY",      # Gemini
+                "LLM2_API_KEY",     # OpenRouter
+                "LLM3_API_KEY",     # Mistral
+                "GROQ_API_KEY",     # Groq
+                "ZAI_API_KEY",      # Z.AI
+                "COHERE_API_KEY",   # Cohere
+            ]
+            for idx, key in enumerate(parts[:len(var_names)]):
+                var = var_names[idx]
+                if not os.environ.get(var):
+                    os.environ[var] = key
 
         providers = []
 
-        # Provider 1 (Default: Google Gemini OpenAI-compatible)
-        p1 = self._build_provider(
-            prefix="LLM_",
-            default_base="https://generativelanguage.googleapis.com/v1beta/openai",
-            default_models=["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"],
-        )
-        if p1:
-            providers.append(p1)
+        # 1. Google Gemini (15 RPM, 1,500 RPD)
+        gemini_key = os.environ.get("LLM_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            p = self._build_provider(
+                name="Gemini",
+                token=gemini_key,
+                base_env=os.environ.get("LLM_BASE_URL") or self.config.get("LLM_BASE_URL") or "https://generativelanguage.googleapis.com/v1beta/openai",
+                model_env=os.environ.get("LLM_MODEL") or self.config.get("LLM_MODEL") or "gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash",
+                default_models=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
+            )
+            if p:
+                providers.append(p)
 
-        # Provider 2 (Default: Mistral AI)
-        p2 = self._build_provider(
-            prefix="LLM3_",
-            default_base="https://api.mistral.ai/v1",
-            default_models=["codestral-latest", "mistral-small-latest", "mistral-large-latest"],
-        )
-        if p2:
-            providers.append(p2)
+        # 2. Groq (Ultra-fast LPU, 30 RPM, 1,000 RPD)
+        groq_key = os.environ.get("GROQ_API_KEY")
+        if groq_key:
+            p = self._build_provider(
+                name="Groq",
+                token=groq_key,
+                base_env=os.environ.get("GROQ_BASE_URL") or self.config.get("GROQ_BASE_URL") or "https://api.groq.com/openai/v1",
+                model_env=os.environ.get("GROQ_MODEL") or self.config.get("GROQ_MODEL") or "qwen-2.5-coder-32b,llama-3.3-70b-versatile,openai/gpt-oss-120b",
+                default_models=["qwen-2.5-coder-32b", "llama-3.3-70b-versatile", "openai/gpt-oss-120b"],
+            )
+            if p:
+                providers.append(p)
 
-        # Provider 3 (Default: OpenRouter)
-        p3 = self._build_provider(
-            prefix="LLM2_",
-            default_base="https://openrouter.ai/api/v1",
-            default_models=[
-                "qwen/qwen-2.5-coder-32b-instruct",
-                "deepseek/deepseek-chat",
-                "meta-llama/llama-3.3-70b-instruct",
-                "z-ai/glm-5.2:free",
-                "cohere/north-mini-code:free",
-            ],
-        )
-        if p3:
-            providers.append(p3)
+        # 3. Mistral AI (Codestral, 1 RPS, 500K TPM)
+        mistral_key = os.environ.get("LLM3_API_KEY") or os.environ.get("MISTRAL_API_KEY")
+        if mistral_key:
+            p = self._build_provider(
+                name="Mistral",
+                token=mistral_key,
+                base_env=os.environ.get("LLM3_BASE_URL") or self.config.get("LLM3_BASE_URL") or "https://api.mistral.ai/v1",
+                model_env=os.environ.get("LLM3_MODEL") or self.config.get("LLM3_MODEL") or "codestral-latest,mistral-small-latest,mistral-large-latest",
+                default_models=["codestral-latest", "mistral-small-latest", "mistral-large-latest"],
+            )
+            if p:
+                providers.append(p)
+
+        # 4. OpenRouter (Free models router & community models)
+        openrouter_key = os.environ.get("LLM2_API_KEY") or os.environ.get("OPENROUTER_API_KEY")
+        if openrouter_key:
+            p = self._build_provider(
+                name="OpenRouter",
+                token=openrouter_key,
+                base_env=os.environ.get("LLM2_BASE_URL") or self.config.get("LLM2_BASE_URL") or "https://openrouter.ai/api/v1",
+                model_env=os.environ.get("LLM2_MODEL") or self.config.get("LLM2_MODEL") or "openrouter/free,qwen/qwen-2.5-coder-32b-instruct,deepseek/deepseek-chat",
+                default_models=["openrouter/free", "qwen/qwen-2.5-coder-32b-instruct", "deepseek/deepseek-chat"],
+            )
+            if p:
+                providers.append(p)
+
+        # 5. Z.AI / Zhipu GLM (Permanent free tier)
+        zai_key = os.environ.get("ZAI_API_KEY") or os.environ.get("ZHIPU_API_KEY")
+        if zai_key:
+            p = self._build_provider(
+                name="Z.AI",
+                token=zai_key,
+                base_env=os.environ.get("ZAI_BASE_URL") or self.config.get("ZAI_BASE_URL") or "https://api.z.ai/api/paas/v4",
+                model_env=os.environ.get("ZAI_MODEL") or self.config.get("ZAI_MODEL") or "glm-4.7-flash,glm-4.5-flash",
+                default_models=["glm-4.7-flash", "glm-4.5-flash"],
+            )
+            if p:
+                providers.append(p)
+
+        # 6. Cohere (Command-R series)
+        cohere_key = os.environ.get("COHERE_API_KEY")
+        if cohere_key:
+            p = self._build_provider(
+                name="Cohere",
+                token=cohere_key,
+                base_env=os.environ.get("COHERE_BASE_URL") or self.config.get("COHERE_BASE_URL") or "https://api.cohere.com/v2",
+                model_env=os.environ.get("COHERE_MODEL") or self.config.get("COHERE_MODEL") or "command-r-plus,command-r,command-a",
+                default_models=["command-r-plus", "command-r", "command-a"],
+            )
+            if p:
+                providers.append(p)
+
+        # 7. Kilo Code (Universal Keyless Public Fallback - 200 req/hr)
+        if self.enable_keyless_fallback:
+            kilo_base = os.environ.get("KILO_BASE_URL") or self.config.get("KILO_BASE_URL") or "https://api.kilo.ai/api/gateway"
+            kilo_raw_models = os.environ.get("KILO_MODEL") or self.config.get("KILO_MODEL") or "kilo-auto/free,nvidia/nemotron-3-ultra-550b-a55b:free,cohere/north-mini-code:free,stepfun/step-3.7-flash:free"
+            kilo_models = [m.strip() for m in kilo_raw_models.split(",") if m.strip()]
+            providers.append({
+                "name": "KiloAI (Keyless Fallback)",
+                "base": kilo_base.rstrip("/"),
+                "endpoint": f"{kilo_base.rstrip('/')}/chat/completions",
+                "token": os.environ.get("KILO_API_KEY", ""),  # Optional: works anonymously without key!
+                "models": kilo_models,
+            })
 
         return providers
 
     def _build_provider(
         self,
-        prefix: str,
-        default_base: str,
+        name: str,
+        token: str,
+        base_env: str,
+        model_env: str,
         default_models: list[str]
     ) -> dict[str, Any] | None:
-        key = os.environ.get(f"{prefix}API_KEY")
-        if not key:
+        if not token:
             return None
 
-        base = os.environ.get(f"{prefix}BASE_URL") or self.config.get(f"{prefix}BASE_URL") or default_base
-        raw_models = os.environ.get(f"{prefix}MODEL") or self.config.get(f"{prefix}MODEL") or ""
-        models = [m.strip() for m in raw_models.split(",") if m.strip()] if raw_models else default_models
-
-        clean_base = base.rstrip("/")
+        clean_base = base_env.rstrip("/")
+        models = [m.strip() for m in model_env.split(",") if m.strip()] or default_models
         return {
-            "name": prefix.rstrip("_"),
+            "name": name,
             "base": clean_base,
             "endpoint": f"{clean_base}/chat/completions",
-            "token": key,
+            "token": token,
             "models": list(models),
-            "discovered": False,
         }
 
     def call_chat(
@@ -117,12 +187,12 @@ class LLMRouter:
     ) -> str | None:
         """Call LLM providers in sequence with fast failover on rate-limiting."""
         if not self.providers:
-            print("  [LLMRouter] No LLM providers configured with valid API keys.")
+            print("  [LLMRouter] No LLM providers configured.")
             return None
 
         for provider in self.providers:
             endpoint = provider["endpoint"]
-            token = provider["token"]
+            token = provider.get("token", "")
             models = list(provider["models"])
 
             for model in models:
@@ -133,23 +203,32 @@ class LLMRouter:
                     "max_tokens": max_tokens,
                 }).encode("utf-8")
 
+                headers = {
+                    "Content-Type": "application/json",
+                    "User-Agent": "repo-improver-bot/5.0",
+                }
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+
                 # Try at most 2 quick attempts per model (no long sleep stalls!)
                 for attempt in range(2):
                     req = urllib.request.Request(
                         endpoint,
                         data=payload,
                         method="POST",
-                        headers={
-                            "Authorization": f"Bearer {token}",
-                            "Content-Type": "application/json",
-                            "User-Agent": "repo-improver-bot/5.0",
-                        },
+                        headers=headers,
                     )
 
                     try:
                         with urllib.request.urlopen(req, timeout=90) as resp:
                             data = json.loads(resp.read().decode("utf-8"))
-                        content = data["choices"][0]["message"]["content"]
+
+                        choice = data.get("choices", [{}])[0]
+                        message = choice.get("message", {})
+                        content = message.get("content")
+                        if not content and message.get("reasoning"):
+                            content = message.get("reasoning")
+
                         if content:
                             print(f"  [LLMRouter] Responded via {provider['name']} ({model})")
                             return content
@@ -164,17 +243,16 @@ class LLMRouter:
                         # 429 Rate Limit Handling
                         if e.code == 429:
                             if "quota" in err_body.lower() or "billing" in err_body.lower():
-                                print(f"  [LLMRouter] {provider['name']} ({model}) daily quota exhausted. Moving to next provider.")
-                                break  # Break model loop, jump to next provider immediately!
+                                print(f"  [LLMRouter] {provider['name']} ({model}) quota exhausted. Failing over to next provider.")
+                                break  # Jump to next provider immediately!
 
                             print(f"  [LLMRouter] {model} rate-limited (429). Attempt {attempt + 1}/2.")
                             if attempt == 0:
                                 time.sleep(3)  # Short 3-second jitter only
                                 continue
-                            # Fast failover to next model in fallback list
                             break
 
-                        # 503 Overload / 500 Server Error
+                        # 500/502/503/504 Service Overload
                         if e.code in (500, 502, 503, 504):
                             print(f"  [LLMRouter] {model} service unavailable ({e.code}). Attempt {attempt + 1}/2.")
                             if attempt == 0:
@@ -209,7 +287,7 @@ class LLMRouter:
         if fence_match:
             text = fence_match.group(1).strip()
 
-        # 2. Extract outermost JSON bounds
+        # 2. Extract outermost JSON bounds (safely strips reasoning text preambles)
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1 or end <= start:

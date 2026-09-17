@@ -55,17 +55,35 @@ repo-improver-bot/
 
 ---
 
-## Configuration
+## Supported LLM Providers & Free Tiers
 
-The bot is configured via GitHub Actions secrets or environment variables:
+The bot integrates free-tier APIs curated from [awesome-free-llm-apis](https://github.com/mnfst/awesome-free-llm-apis), cascading in order:
+
+| Provider | Env Secret | Notable Models | Free Rate Limits |
+|---|---|---|---|
+| **Google Gemini** | `LLM_API_KEY` / `GEMINI_API_KEY` | `gemini-2.5-flash`, `gemini-2.0-flash` | 15 RPM, 1,500 requests/day |
+| **Groq** | `GROQ_API_KEY` | `qwen-2.5-coder-32b`, `llama-3.3-70b-versatile` | 30 RPM, 1,000 requests/day |
+| **Mistral AI** | `LLM3_API_KEY` / `MISTRAL_API_KEY` | `codestral-latest`, `mistral-small-latest` | ~1 RPS, 500K tokens/min |
+| **OpenRouter** | `LLM2_API_KEY` / `OPENROUTER_API_KEY` | `openrouter/free`, `qwen-2.5-coder-32b` | 50–1,000 requests/day |
+| **Z.AI (Zhipu)** | `ZAI_API_KEY` / `ZHIPU_API_KEY` | `glm-4.7-flash`, `glm-4.5-flash` | Permanent free tier |
+| **Cohere** | `COHERE_API_KEY` | `command-r-plus`, `command-r` | 20 RPM, 1,000 calls/month |
+| **Kilo AI** | *(None required / Keyless)* | `kilo-auto/free`, `nemotron-3-ultra-550b:free` | 200 req/hr per IP (zero key needed!) |
+
+> [!TIP]
+> **Zero Quota Exhaustion**: Even if all personal API keys hit their daily limit, the bot seamlessly cascades to Kilo AI's free model pool so autonomous scheduled runs never stop!
+
+## Configuration
 
 | Variable | Description |
 |---|---|
 | `GH_TOKEN` / `REPO_IMPROVER_TOKEN` | GitHub Personal Access Token (`repo`, `workflow`) |
-| `PROVIDER_KEYS` | Optional comma-separated keys (`key1,key2,key3`) for all LLM providers |
-| `LLM_API_KEY` | Provider 1 API Key (Google Gemini) |
-| `LLM2_API_KEY` | Provider 2 API Key (OpenRouter) |
-| `LLM3_API_KEY` | Provider 3 API Key (Mistral AI) |
+| `PROVIDER_KEYS` | Optional comma-separated keys (`gemini,openrouter,mistral,groq,zai,cohere`) |
+| `LLM_API_KEY` / `GEMINI_API_KEY` | Google Gemini API Key |
+| `GROQ_API_KEY` | Groq API Key |
+| `LLM3_API_KEY` / `MISTRAL_API_KEY` | Mistral AI API Key |
+| `LLM2_API_KEY` / `OPENROUTER_API_KEY` | OpenRouter API Key |
+| `ZAI_API_KEY` / `ZHIPU_API_KEY` | Z.AI GLM API Key |
+| `COHERE_API_KEY` | Cohere API Key |
 | `MAX_REPOS_PER_RUN` | Max repos to process per scheduled execution (default: `2`) |
 | `TARGET_REPO` | Optional repository name to explicitly target |
 | `IMPROVEMENT_MODE` | Optional stage override (`auto`, `tests`, `benchmarks`, `optimization`, `documentation`) |
