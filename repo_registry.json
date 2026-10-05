@@ -416,11 +416,20 @@
   "early-warning-complex-systems": {
     "description": "Mathematical research framework testing whether statistical, physical, and information-theoretic indicators can anticipate critical transitions and collapse in complex systems.",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T11:47:45.813667+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/early-warning-complex-systems/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (9 files)",
+        "timestamp": "2026-10-05T11:47:45.813667+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "edge-disjoint-triangle-packings": {
     "description": "Edge-disjoint non-crossing triangle packings of planar point sets: a convex barrier and a reduction to subcubic trees",
