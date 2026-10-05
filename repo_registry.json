@@ -323,13 +323,22 @@
     ]
   },
   "adic-diversity": {
-    "description": null,
+    "description": "",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T15:04:55.843688+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/adic-diversity/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (10 files)",
+        "timestamp": "2026-10-05T15:04:55.843688+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "autod": {
     "description": "Autonomous repository synthesizer that uses frontier LLMs to invent, develop, verify, and publish a production-ready open-source project every 48 hours.",
@@ -382,11 +391,20 @@
   "connected-labeled-parity": {
     "description": "Exact 2-adic valuations of connected labeled graphs and weakly connected digraphs",
     "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T15:05:49.213316+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/connected-labeled-parity/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (8 files)",
+        "timestamp": "2026-10-05T15:05:49.213316+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "convex-thrackle-census": {
     "description": "A census of convex thrackles: residue bound, wedge lemma, and the exact count 2^(n-1)-n of maximal thrackles",
