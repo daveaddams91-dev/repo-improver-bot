@@ -64,12 +64,12 @@ jobs:
         if: always()
         run: |
           git config user.name "repo-improver-bot[bot]"
-          git config user.email "144442360+Raj123-0[bot]@users.noreply.github.com"
-          git fetch origin main || true
-          git rebase origin/main || git rebase --abort || true
+          git config user.email "repo-improver-bot@users.noreply.github.com"
           git add -A repo_registry.json LAST_RUN.md || true
           if ! git diff --cached --quiet; then
             git commit -m "chore: update repo registry and keep-alive heartbeat"
+            # Rebase AFTER committing: rebasing with unstaged changes present aborts.
+            git pull --rebase origin main || git rebase --abort || true
             git push origin main || true
           fi
 
