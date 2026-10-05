@@ -85,8 +85,8 @@ class LLMRouter:
                 name="Groq",
                 token=groq_key,
                 base_env=os.environ.get("GROQ_BASE_URL") or self.config.get("GROQ_BASE_URL") or "https://api.groq.com/openai/v1",
-                model_env=os.environ.get("GROQ_MODEL") or self.config.get("GROQ_MODEL") or "qwen-2.5-coder-32b,llama-3.3-70b-versatile,openai/gpt-oss-120b",
-                default_models=["qwen-2.5-coder-32b", "llama-3.3-70b-versatile", "openai/gpt-oss-120b"],
+                model_env=os.environ.get("GROQ_MODEL") or self.config.get("GROQ_MODEL") or "openai/gpt-oss-120b",
+                default_models=["openai/gpt-oss-120b"],
             )
             if p:
                 providers.append(p)
@@ -301,17 +301,26 @@ class LLMRouter:
         except json.JSONDecodeError:
             pass
 
-        # Repair 1: Fix invalid backslashes (e.g. raw \d, \s, \w, \b in code strings)
-        repaired = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', json_str)
+        # Repair 0: allow literal control characters (raw newlines/tabs) inside
+        # strings. Models routinely return multi-line source code without escaping
+        # the newlines, which makes strict parsing fail even though the structure
+        # is perfectly sound. strict=False accepts those raw control characters.
         try:
-            return json.loads(repaired)
+            return json.loads(json_str, strict=False)
         except json.JSONDecodeError:
             pass
 
-        # Repair 2: Fix trailing commas before closing braces/brackets
+        # Repair 1: fix invalid backslashes (e.g. raw \d, \s, \w, \b in code)
+        repaired = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', json_str)
+        try:
+            return json.loads(repaired, strict=False)
+        except json.JSONDecodeError:
+            pass
+
+        # Repair 2: fix trailing commas before closing braces/brackets
         repaired = re.sub(r',\s*([}\]])', r'\1', repaired)
         try:
-            return json.loads(repaired)
+            return json.loads(repaired, strict=False)
         except json.JSONDecodeError:
             pass
 
