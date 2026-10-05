@@ -212,9 +212,9 @@ class LLMRouter:
         # capable free tiers are tried before slower or more limited ones. Any
         # provider not listed (e.g. the keyless Kilo fallback) sorts last.
         _priority = [
-            "Groq", "NVIDIA NIM", "GitHub Models", "Mistral",
+            "LLM7.io", "Groq", "NVIDIA NIM", "GitHub Models", "Mistral",
             "OpenRouter", "Hugging Face", "ModelScope",
-            "Z.AI", "LLM7.io", "Cohere", "Cloudflare Workers AI",
+            "Z.AI", "Cohere", "Cloudflare Workers AI",
         ]
         providers.sort(key=lambda p: _priority.index(p["name"]) if p["name"] in _priority else len(_priority))
 
