@@ -94,7 +94,7 @@ The bot integrates free-tier APIs curated from [awesome-free-llm-apis](https://g
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Raj123-0/repo-improver-bot.git
+   git clone https://github.com/rajveersinh-is-dev/repo-improver-bot.git
    cd repo-improver-bot
    ```
 

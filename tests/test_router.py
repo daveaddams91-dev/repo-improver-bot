@@ -85,3 +85,34 @@ def test_keyless_kilo_fallback(monkeypatch):
     # Even with ZERO API keys set, Kilo AI is available as fallback!
     assert len(router.providers) == 1
     assert "KiloAI" in router.providers[0]["name"]
+
+
+def test_parse_json_literal_newlines_in_code():
+    """Models often emit multi-line code with raw (unescaped) newlines.
+
+    Regression: this used to fail strict parsing and the whole LLM improvement
+    was silently discarded.
+    """
+    payload = (
+        "```json\n{\n"
+        '  "improved_code": "def f():\n    return 1\n",\n'
+        '  "summary": "ok",\n'
+        '  "tests": null\n}\n```'
+    )
+    res = LLMRouter.parse_json(payload)
+    assert res is not None
+    assert res["improved_code"] == "def f():\n    return 1\n"
+
+
+def test_parse_json_literal_tab_in_string():
+    payload = '{"improved_code": "x = 1\t\n", "summary": "s"}'
+    res = LLMRouter.parse_json(payload)
+    assert res is not None
+    assert res["improved_code"] == "x = 1\t\n"
+
+
+def test_parse_json_multiline_with_trailing_comma():
+    payload = '{"improved_code": "a = 1\nb = 2\n", "summary": "s",}'
+    res = LLMRouter.parse_json(payload)
+    assert res is not None
+    assert "a = 1" in res["improved_code"]

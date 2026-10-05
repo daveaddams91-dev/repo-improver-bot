@@ -42,3 +42,11 @@ def test_get_domain_prompt_instructions():
 
     instr_crypto = get_domain_prompt_instructions(DOMAIN_PHYSICS_CRYPTO, "AegisCrypt")
     assert "Cryptography" in instr_crypto or "Simulation" in instr_crypto
+
+
+def test_generate_domain_readme_uses_owner_in_urls():
+    readme = generate_domain_readme(
+        DOMAIN_MATH_CONSTANT, "Universal-Parabolic-Constant", "", ["main.py"], owner="acme"
+    )
+    assert "https://github.com/acme/Universal-Parabolic-Constant" in readme
+    assert "Raj123-0" not in readme
