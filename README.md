@@ -69,6 +69,7 @@ The bot integrates free-tier APIs curated from [awesome-free-llm-apis](https://g
 | **SambaNova** | `SAMBANOVA_API_KEY` | `Meta-Llama-3.3-70B-Instruct` | 20 RPM, 20 req/day |
 | **OpenRouter** | `LLM2_API_KEY` / `OPENROUTER_API_KEY` | `:free` routes | 20 RPM, 50–1,000 req/day |
 | **Hugging Face** | `HF_TOKEN` | `Qwen/Qwen2.5-72B-Instruct` | monthly inference credits |
+| **ModelScope** | `MODELSCOPE_API_KEY` | `Qwen/Qwen3-235B-A22B-Instruct-2507` | 2,000 req/day (phone signup) |
 | **Together AI** | `TOGETHER_API_KEY` | selected `$0` models | free model tier |
 | **Z.AI (Zhipu)** | `ZAI_API_KEY` / `ZHIPU_API_KEY` | `glm-4.7-flash`, `glm-4.5-flash` | ~1,000 req/day |
 | **LLM7.io** | `LLM7_API_KEY` *(optional)* | `gpt-oss-120b` | ~30–120 RPM |
@@ -77,7 +78,7 @@ The bot integrates free-tier APIs curated from [awesome-free-llm-apis](https://g
 | **Cloudflare Workers AI** | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 10,000 neurons/day |
 | **Kilo AI** | *(None required / Keyless)* | `kilo-auto/free` | 200 req/hr per IP (zero key needed!) |
 
-Each provider activates **only when its secret is present**, so you can add keys one at a time. More keys = more combined headroom before any single rate limit bites. Model IDs are overridable in `llm-config.json` (or via a `<PREFIX>_MODEL` env var) as providers rotate their catalogs.
+Providers are tried **best-first** (fastest, most generous, most capable free tiers first; the keyless Kilo fallback last). Each provider activates **only when its secret is present**, so you can add keys one at a time. More keys = more combined headroom before any single rate limit bites. Model IDs are overridable in `llm-config.json` (or via a `<PREFIX>_MODEL` env var) as providers rotate their catalogs.
 
 > [!TIP]
 > **Zero Quota Exhaustion**: Even if all personal API keys hit their daily limit, the bot seamlessly cascades to Kilo AI's free model pool so autonomous scheduled runs never stop!
@@ -100,6 +101,7 @@ Each provider activates **only when its secret is present**, so you can add keys
 | `ZAI_API_KEY` / `ZHIPU_API_KEY` | Z.AI GLM API Key |
 | `LLM7_API_KEY` | LLM7.io token (optional — works anonymously too) |
 | `OVH_AI_API_KEY` | OVHcloud AI Endpoints key (optional) |
+| `MODELSCOPE_API_KEY` | ModelScope (Alibaba) API key |
 | `COHERE_API_KEY` | Cohere API Key |
 | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Workers AI |
 | `MAX_REPOS_PER_RUN` | Max repos to process per scheduled execution (default: `2`) |
