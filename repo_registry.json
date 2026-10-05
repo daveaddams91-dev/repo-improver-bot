@@ -260,7 +260,7 @@
   },
   "Tokamak-Py": {
     "description": "High-performance Numba-accelerated N-body electromagnetic plasma confinement engine for tokamak physics, with Boris integration and PyQt6 visualization.",
-    "domain": "systems_compiler",
+    "domain": "physics_simulation_crypto",
     "improvements_count": 1,
     "language": "Python",
     "last_improved_at": "2026-10-05T13:04:32.950366+00:00",
@@ -547,11 +547,20 @@
   "terrain-erosion-engine": {
     "description": "GPU-accelerated procedural terrain generator simulating hydraulic and thermal erosion in the browser with WebGPU compute shaders and Three.js.",
     "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T13:07:14.289028+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/terrain-erosion-engine/pull/2",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (1 files)",
+        "timestamp": "2026-10-05T13:07:14.289028+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "threshold-preference-arrangements": {
     "description": "Exact chamber counts for tolerance-based distance orderings of point sets (arrangements of indifference hyperbolas)",
