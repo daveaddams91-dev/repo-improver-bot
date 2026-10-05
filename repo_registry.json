@@ -259,8 +259,10 @@
     "stages_completed": []
   },
   "Tokamak-Py": {
-    "domain": "general_python",
+    "description": "High-performance Numba-accelerated N-body electromagnetic plasma confinement engine for tokamak physics, with Boris integration and PyQt6 visualization.",
+    "domain": "physics_simulation_crypto",
     "improvements_count": 0,
+    "language": "Python",
     "last_improved_at": null,
     "pr_history": [],
     "stages_completed": []
@@ -311,6 +313,24 @@
       "hygiene"
     ]
   },
+  "adic-diversity": {
+    "description": null,
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "autod": {
+    "description": "Autonomous repository synthesizer that uses frontier LLMs to invent, develop, verify, and publish a production-ready open-source project every 48 hours.",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "avalanche-graph-dynamics": {
     "domain": "general_python",
     "improvements_count": 0,
@@ -325,9 +345,54 @@
     "pr_history": [],
     "stages_completed": []
   },
+  "certified-dose": {
+    "description": "Python package, CLI, and dashboard that wrap automated process-control dosing in a formal reachability-analysis safety layer for worst-case compliance.",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "check": {
     "domain": "general_python",
     "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "connected-labeled-parity": {
+    "description": "Exact 2-adic valuations of connected labeled graphs and weakly connected digraphs",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "convex-thrackle-census": {
+    "description": "A census of convex thrackles: residue bound, wedge lemma, and the exact count 2^(n-1)-n of maximal thrackles",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "cycle-spectra-connectivity": {
+    "description": "Cycle counts of k-connected graphs: a sharp minimum (min = c(K_{k+1})), decidability of the cycle-count spectrum, and the exact 3-connected spectrum up to order 9",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "daveaddams91-dev": {
+    "description": "Profile README for Rajveersinh Pardeshi",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
     "last_improved_at": null,
     "pr_history": [],
     "stages_completed": []
@@ -339,9 +404,45 @@
     "pr_history": [],
     "stages_completed": []
   },
+  "docutrust": {
+    "description": "Sovereign trust fabric for verifiable credentials, autonomous agent identity federation, confidential mixnets, RAG provenance, and zero-knowledge state machines.",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "early-warning-complex-systems": {
+    "description": "Mathematical research framework testing whether statistical, physical, and information-theoretic indicators can anticipate critical transitions and collapse in complex systems.",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "edge-disjoint-triangle-packings": {
+    "description": "Edge-disjoint non-crossing triangle packings of planar point sets: a convex barrier and a reduction to subcubic trees",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "havn": {
     "domain": "general_python",
     "improvements_count": 0,
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "inertia-admissible-polynomials": {
+    "description": "Boolean admissibility and the q/s ceiling for graph positive inertia: exact linearisation, the s=1 case, certified data, and a conjectured barrier at 3",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
     "last_improved_at": null,
     "pr_history": [],
     "stages_completed": []
@@ -364,6 +465,15 @@
       "hygiene"
     ]
   },
+  "maximal-convex-position-subsets": {
+    "description": "On the extremal number of maximal convex-position subsets of a planar point set: exact values f(n) for n<=9, a duality theorem, and reproducible computation over all order types.",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "numlang": {
     "domain": "general_python",
     "improvements_count": 0,
@@ -380,9 +490,47 @@
     "pr_history": [],
     "stages_completed": []
   },
-  "terrain-erosion-engine": {
+  "polygon-triangulation-packing": {
+    "description": "Exact extremal theory for packing and covering convex polygon triangulations (tau(n), kappa(n)), with constructive proofs and computational validation.",
     "domain": "general_python",
     "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "terrain-erosion-engine": {
+    "description": "GPU-accelerated procedural terrain generator simulating hydraulic and thermal erosion in the browser with WebGPU compute shaders and Three.js.",
+    "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "threshold-preference-arrangements": {
+    "description": "Exact chamber counts for tolerance-based distance orderings of point sets (arrangements of indifference hyperbolas)",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "triple-cover-convex-polygon": {
+    "description": "The triple-covering number of a convex n-gon: a gap-weight certificate lower bound for all n, exact values (certified) for n<=14, and a solved boundary-edge sub-problem",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "umbra": {
+    "description": "Research-grade Python library for MNAR-aware missing data diagnostics, identifiability bounds, and robust imputation under non-random missingness.",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
     "last_improved_at": null,
     "pr_history": [],
     "stages_completed": []
