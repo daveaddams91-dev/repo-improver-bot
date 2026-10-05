@@ -6,14 +6,10 @@ Integrates providers from awesome-free-llm-apis (all OpenAI-compatible):
 - OpenRouter (Free models router & community models)
 - Z.AI / Zhipu (GLM-4.7-Flash permanent free tier)
 - Cohere (Command-R series free trial)
-- Cerebras (fast, ~14,400 RPD)
 - GitHub Models (free via GitHub account)
 - NVIDIA NIM (~40 RPM, no daily cap)
-- SambaNova (free tier)
 - Hugging Face Inference Providers (monthly credits)
-- Together AI (selected free models)
 - LLM7.io (key optional)
-- OVHcloud AI Endpoints (anonymous free tier)
 - ModelScope (Alibaba hub, 2,000 req/day)
 - Cloudflare Workers AI (10K neurons/day)
 - Kilo Code (Universal zero-key fallback, 200 req/hr)
@@ -145,30 +141,18 @@ class LLMRouter:
         # pool so per-provider rate limits are far less likely to bite. Model lists
         # are overridable via <PREFIX>_MODEL (env var or llm-config.json).
         extra_providers = [
-            ("Cerebras", ("CEREBRAS_API_KEY",), "CEREBRAS",
-             "https://api.cerebras.ai/v1",
-             "gpt-oss-120b,llama-3.3-70b,qwen-3-32b"),
             ("GitHub Models", ("GITHUB_MODELS_TOKEN", "MODELS_TOKEN"), "GITHUB_MODELS",
              "https://models.github.ai/inference",
              "openai/gpt-4o-mini,openai/gpt-4o,meta/Llama-3.3-70B-Instruct"),
             ("NVIDIA NIM", ("NVIDIA_API_KEY", "NVIDIA_NIM_API_KEY"), "NVIDIA",
              "https://integrate.api.nvidia.com/v1",
              "meta/llama-3.3-70b-instruct,deepseek-ai/deepseek-r1,qwen/qwen3-235b-a22b"),
-            ("SambaNova", ("SAMBANOVA_API_KEY",), "SAMBANOVA",
-             "https://api.sambanova.ai/v1",
-             "Meta-Llama-3.3-70B-Instruct,Llama-4-Maverick-17B-128E-Instruct"),
             ("Hugging Face", ("HF_TOKEN", "HUGGINGFACE_API_KEY"), "HUGGINGFACE",
              "https://router.huggingface.co/v1",
              "Qwen/Qwen2.5-72B-Instruct,meta-llama/Llama-3.3-70B-Instruct"),
-            ("Together AI", ("TOGETHER_API_KEY",), "TOGETHER",
-             "https://api.together.xyz/v1",
-             "meta-llama/Llama-3.3-70B-Instruct-Turbo,Qwen/Qwen2.5-Coder-32B-Instruct"),
             ("LLM7.io", ("LLM7_API_KEY",), "LLM7",
              "https://api.llm7.io/v1",
              "gpt-oss-120b,llama-3.1-8b-instruct"),
-            ("OVHcloud AI", ("OVH_AI_API_KEY",), "OVH",
-             "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-             "Meta-Llama-3_3-70B-Instruct,Qwen3-32B"),
             ("ModelScope", ("MODELSCOPE_API_KEY",), "MODELSCOPE",
              "https://api-inference.modelscope.cn/v1",
              "Qwen/Qwen3-235B-A22B-Instruct-2507,Qwen/Qwen3.5-32B-Instruct"),
@@ -228,9 +212,9 @@ class LLMRouter:
         # capable free tiers are tried before slower or more limited ones. Any
         # provider not listed (e.g. the keyless Kilo fallback) sorts last.
         _priority = [
-            "Groq", "Cerebras", "NVIDIA NIM", "GitHub Models", "Mistral",
-            "OpenRouter", "SambaNova", "Together AI", "Hugging Face", "ModelScope",
-            "Z.AI", "LLM7.io", "OVHcloud AI", "Cohere", "Cloudflare Workers AI",
+            "Groq", "NVIDIA NIM", "GitHub Models", "Mistral",
+            "OpenRouter", "Hugging Face", "ModelScope",
+            "Z.AI", "LLM7.io", "Cohere", "Cloudflare Workers AI",
         ]
         providers.sort(key=lambda p: _priority.index(p["name"]) if p["name"] in _priority else len(_priority))
 
