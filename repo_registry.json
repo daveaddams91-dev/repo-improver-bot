@@ -260,12 +260,21 @@
   },
   "Tokamak-Py": {
     "description": "High-performance Numba-accelerated N-body electromagnetic plasma confinement engine for tokamak physics, with Boris integration and PyQt6 visualization.",
-    "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "domain": "systems_compiler",
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T13:04:32.950366+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/Tokamak-Py/pull/2",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (10 files)",
+        "timestamp": "2026-10-05T13:04:32.950366+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "Tribonacci-Constant": {
     "domain": "general_python",
