@@ -94,13 +94,12 @@ def test_gemini_removed(monkeypatch):
 
 def test_new_free_providers_activate(monkeypatch):
     _clear_all_keys(monkeypatch)
-    monkeypatch.setenv("CEREBRAS_API_KEY", "k")
     monkeypatch.setenv("NVIDIA_API_KEY", "k")
     monkeypatch.setenv("HF_TOKEN", "k")
-    monkeypatch.setenv("SAMBANOVA_API_KEY", "k")
+    monkeypatch.setenv("MODELSCOPE_API_KEY", "k")
     router = LLMRouter(config={}, enable_keyless_fallback=False)
     names = {p["name"] for p in router.providers}
-    assert {"Cerebras", "NVIDIA NIM", "Hugging Face", "SambaNova"} <= names, names
+    assert {"NVIDIA NIM", "Hugging Face", "ModelScope"} <= names, names
 
 
 def test_cloudflare_requires_account_id(monkeypatch):
@@ -173,3 +172,14 @@ def test_modelscope_activates(monkeypatch):
     router = LLMRouter(config={}, enable_keyless_fallback=False)
     ms = [p for p in router.providers if p["name"] == "ModelScope"]
     assert ms and ms[0]["endpoint"] == "https://api-inference.modelscope.cn/v1/chat/completions"
+
+
+def test_non_lifetime_providers_excluded(monkeypatch):
+    """Cerebras/SambaNova/Together/OVHcloud are trial-credit or card-required, so
+    their keys must be ignored even when present."""
+    _clear_all_keys(monkeypatch)
+    for v in ("CEREBRAS_API_KEY", "SAMBANOVA_API_KEY", "TOGETHER_API_KEY", "OVH_AI_API_KEY"):
+        monkeypatch.setenv(v, "k")
+    router = LLMRouter(config={}, enable_keyless_fallback=False)
+    names = {p["name"] for p in router.providers}
+    assert names == set(), names
