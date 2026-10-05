@@ -64,6 +64,7 @@ jobs:
           TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
           LLM7_API_KEY: ${{ secrets.LLM7_API_KEY }}
           OVH_AI_API_KEY: ${{ secrets.OVH_AI_API_KEY }}
+          MODELSCOPE_API_KEY: ${{ secrets.MODELSCOPE_API_KEY }}
           CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MAX_REPOS_PER_RUN: ${{ inputs.max_repos || '2' }}

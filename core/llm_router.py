@@ -14,6 +14,7 @@ Integrates providers from awesome-free-llm-apis (all OpenAI-compatible):
 - Together AI (selected free models)
 - LLM7.io (key optional)
 - OVHcloud AI Endpoints (anonymous free tier)
+- ModelScope (Alibaba hub, 2,000 req/day)
 - Cloudflare Workers AI (10K neurons/day)
 - Kilo Code (Universal zero-key fallback, 200 req/hr)
 
@@ -168,6 +169,9 @@ class LLMRouter:
             ("OVHcloud AI", ("OVH_AI_API_KEY",), "OVH",
              "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
              "Meta-Llama-3_3-70B-Instruct,Qwen3-32B"),
+            ("ModelScope", ("MODELSCOPE_API_KEY",), "MODELSCOPE",
+             "https://api-inference.modelscope.cn/v1",
+             "Qwen/Qwen3-235B-A22B-Instruct-2507,Qwen/Qwen3.5-32B-Instruct"),
         ]
         for name, envs, prefix, base_default, models_default in extra_providers:
             token = next((os.environ.get(e) for e in envs if os.environ.get(e)), None)
@@ -219,6 +223,16 @@ class LLMRouter:
                 "token": os.environ.get("KILO_API_KEY", ""),  # Optional: works anonymously without key!
                 "models": kilo_models,
             })
+
+        # Order the failover chain best-first: the fastest, most generous, and most
+        # capable free tiers are tried before slower or more limited ones. Any
+        # provider not listed (e.g. the keyless Kilo fallback) sorts last.
+        _priority = [
+            "Groq", "Cerebras", "NVIDIA NIM", "GitHub Models", "Mistral",
+            "OpenRouter", "SambaNova", "Together AI", "Hugging Face", "ModelScope",
+            "Z.AI", "LLM7.io", "OVHcloud AI", "Cohere", "Cloudflare Workers AI",
+        ]
+        providers.sort(key=lambda p: _priority.index(p["name"]) if p["name"] in _priority else len(_priority))
 
         return providers
 
