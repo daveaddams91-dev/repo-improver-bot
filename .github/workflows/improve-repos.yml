@@ -56,14 +56,10 @@ jobs:
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           # Additional free-tier providers (add the secret to activate each one)
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          SAMBANOVA_API_KEY: ${{ secrets.SAMBANOVA_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
           LLM7_API_KEY: ${{ secrets.LLM7_API_KEY }}
-          OVH_AI_API_KEY: ${{ secrets.OVH_AI_API_KEY }}
           MODELSCOPE_API_KEY: ${{ secrets.MODELSCOPE_API_KEY }}
           CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
