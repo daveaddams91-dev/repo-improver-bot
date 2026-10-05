@@ -323,7 +323,7 @@
     ]
   },
   "adic-diversity": {
-    "description": "",
+    "description": null,
     "domain": "general_python",
     "improvements_count": 1,
     "language": "Python",
@@ -375,11 +375,20 @@
   "certified-dose": {
     "description": "Python package, CLI, and dashboard that wrap automated process-control dosing in a formal reachability-analysis safety layer for worst-case compliance.",
     "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T22:52:28.093138+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/certified-dose/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (9 files)",
+        "timestamp": "2026-10-05T22:52:28.093138+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "check": {
     "domain": "general_python",
@@ -470,11 +479,20 @@
   "edge-disjoint-triangle-packings": {
     "description": "Edge-disjoint non-crossing triangle packings of planar point sets: a convex barrier and a reduction to subcubic trees",
     "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T22:50:09.608497+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/edge-disjoint-triangle-packings/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (12 files)",
+        "timestamp": "2026-10-05T22:50:09.608497+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "edge-disjoint-triangulations": {
     "description": "Edge-disjoint triangulations of convex polygons: packing number floor(n/2), resolutions of P_2m, and their classification (2^(m-2) of them)",
@@ -529,8 +547,10 @@
     "stages_completed": []
   },
   "numlang": {
-    "domain": "general_python",
+    "description": "A research programming language with a higher-order supercompiler, polyhedral recurrence solver, and Lean 4 mechanized correctness proofs.",
+    "domain": "systems_compiler",
     "improvements_count": 0,
+    "language": "Python",
     "last_improved_at": null,
     "pr_history": [],
     "stages_completed": []
