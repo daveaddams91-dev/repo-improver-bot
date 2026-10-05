@@ -1,13 +1,23 @@
 """Resilient Multi-Provider LLM Router with Fast Failover, Keyless Fallback, and JSON Repair.
 
-Integrates providers from awesome-free-llm-apis:
-- Google Gemini (Free tier, 1,500 RPD)
-- Groq (Ultra-fast LPU, 1,000 RPD)
-- Mistral AI (Codestral & Small, free credits)
+Integrates providers from awesome-free-llm-apis (all OpenAI-compatible):
+- Groq (Ultra-fast LPU, 30 RPM, 14,400 RPD)
+- Mistral AI (Codestral & Small, free experimentation tier)
 - OpenRouter (Free models router & community models)
 - Z.AI / Zhipu (GLM-4.7-Flash permanent free tier)
 - Cohere (Command-R series free trial)
+- Cerebras (fast, ~14,400 RPD)
+- GitHub Models (free via GitHub account)
+- NVIDIA NIM (~40 RPM, no daily cap)
+- SambaNova (free tier)
+- Hugging Face Inference Providers (monthly credits)
+- Together AI (selected free models)
+- LLM7.io (key optional)
+- OVHcloud AI Endpoints (anonymous free tier)
+- Cloudflare Workers AI (10K neurons/day)
 - Kilo Code (Universal zero-key fallback, 200 req/hr)
+
+Note: Google Gemini was removed by request.
 """
 
 from __future__ import annotations
@@ -51,10 +61,9 @@ class LLMRouter:
         if pk:
             parts = [p.strip() for p in pk.split(",") if p.strip()]
             var_names = [
-                "LLM_API_KEY",      # Gemini
+                "GROQ_API_KEY",     # Groq
                 "LLM2_API_KEY",     # OpenRouter
                 "LLM3_API_KEY",     # Mistral
-                "GROQ_API_KEY",     # Groq
                 "ZAI_API_KEY",      # Z.AI
                 "COHERE_API_KEY",   # Cohere
             ]
@@ -64,19 +73,6 @@ class LLMRouter:
                     os.environ[var] = key
 
         providers = []
-
-        # 1. Google Gemini (15 RPM, 1,500 RPD)
-        gemini_key = os.environ.get("LLM_API_KEY") or os.environ.get("GEMINI_API_KEY")
-        if gemini_key:
-            p = self._build_provider(
-                name="Gemini",
-                token=gemini_key,
-                base_env=os.environ.get("LLM_BASE_URL") or self.config.get("LLM_BASE_URL") or "https://generativelanguage.googleapis.com/v1beta/openai",
-                model_env=os.environ.get("LLM_MODEL") or self.config.get("LLM_MODEL") or "gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash",
-                default_models=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
-            )
-            if p:
-                providers.append(p)
 
         # 2. Groq (Ultra-fast LPU, 30 RPM, 1,000 RPD)
         groq_key = os.environ.get("GROQ_API_KEY")
@@ -139,6 +135,74 @@ class LLMRouter:
                 base_env=os.environ.get("COHERE_BASE_URL") or self.config.get("COHERE_BASE_URL") or "https://api.cohere.com/v2",
                 model_env=os.environ.get("COHERE_MODEL") or self.config.get("COHERE_MODEL") or "command-r-plus,command-r,command-a",
                 default_models=["command-r-plus", "command-r", "command-a"],
+            )
+            if p:
+                providers.append(p)
+
+        # --- Additional free-tier providers (all OpenAI-compatible) ---
+        # Each activates only when its API key is present, widening the failover
+        # pool so per-provider rate limits are far less likely to bite. Model lists
+        # are overridable via <PREFIX>_MODEL (env var or llm-config.json).
+        extra_providers = [
+            ("Cerebras", ("CEREBRAS_API_KEY",), "CEREBRAS",
+             "https://api.cerebras.ai/v1",
+             "gpt-oss-120b,llama-3.3-70b,qwen-3-32b"),
+            ("GitHub Models", ("GITHUB_MODELS_TOKEN", "MODELS_TOKEN"), "GITHUB_MODELS",
+             "https://models.github.ai/inference",
+             "openai/gpt-4o-mini,openai/gpt-4o,meta/Llama-3.3-70B-Instruct"),
+            ("NVIDIA NIM", ("NVIDIA_API_KEY", "NVIDIA_NIM_API_KEY"), "NVIDIA",
+             "https://integrate.api.nvidia.com/v1",
+             "meta/llama-3.3-70b-instruct,deepseek-ai/deepseek-r1,qwen/qwen3-235b-a22b"),
+            ("SambaNova", ("SAMBANOVA_API_KEY",), "SAMBANOVA",
+             "https://api.sambanova.ai/v1",
+             "Meta-Llama-3.3-70B-Instruct,Llama-4-Maverick-17B-128E-Instruct"),
+            ("Hugging Face", ("HF_TOKEN", "HUGGINGFACE_API_KEY"), "HUGGINGFACE",
+             "https://router.huggingface.co/v1",
+             "Qwen/Qwen2.5-72B-Instruct,meta-llama/Llama-3.3-70B-Instruct"),
+            ("Together AI", ("TOGETHER_API_KEY",), "TOGETHER",
+             "https://api.together.xyz/v1",
+             "meta-llama/Llama-3.3-70B-Instruct-Turbo,Qwen/Qwen2.5-Coder-32B-Instruct"),
+            ("LLM7.io", ("LLM7_API_KEY",), "LLM7",
+             "https://api.llm7.io/v1",
+             "gpt-oss-120b,llama-3.1-8b-instruct"),
+            ("OVHcloud AI", ("OVH_AI_API_KEY",), "OVH",
+             "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+             "Meta-Llama-3_3-70B-Instruct,Qwen3-32B"),
+        ]
+        for name, envs, prefix, base_default, models_default in extra_providers:
+            token = next((os.environ.get(e) for e in envs if os.environ.get(e)), None)
+            if not token:
+                continue
+            p = self._build_provider(
+                name=name,
+                token=token,
+                base_env=os.environ.get(f"{prefix}_BASE_URL") or self.config.get(f"{prefix}_BASE_URL") or base_default,
+                model_env=os.environ.get(f"{prefix}_MODEL") or self.config.get(f"{prefix}_MODEL") or models_default,
+                default_models=[m.strip() for m in models_default.split(",")],
+            )
+            if p:
+                providers.append(p)
+
+        # Cloudflare Workers AI (the account id is part of the base URL)
+        cf_key = os.environ.get("CLOUDFLARE_API_KEY") or os.environ.get("CLOUDFLARE_API_TOKEN")
+        cf_account = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+        if cf_key and cf_account:
+            cf_base = (
+                os.environ.get("CLOUDFLARE_BASE_URL")
+                or self.config.get("CLOUDFLARE_BASE_URL")
+                or f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/ai/v1"
+            )
+            cf_models = (
+                os.environ.get("CLOUDFLARE_MODEL")
+                or self.config.get("CLOUDFLARE_MODEL")
+                or "@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/qwen/qwen2.5-coder-32b-instruct"
+            )
+            p = self._build_provider(
+                name="Cloudflare Workers AI",
+                token=cf_key,
+                base_env=cf_base,
+                model_env=cf_models,
+                default_models=["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/qwen/qwen2.5-coder-32b-instruct"],
             )
             if p:
                 providers.append(p)
