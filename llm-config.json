@@ -27,5 +27,7 @@
   "LLM7_MODEL": "gpt-oss-120b,llama-3.1-8b-instruct",
   "OVH_BASE_URL": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
   "OVH_MODEL": "Meta-Llama-3_3-70B-Instruct,Qwen3-32B",
-  "CLOUDFLARE_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/qwen/qwen2.5-coder-32b-instruct"
+  "CLOUDFLARE_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/qwen/qwen2.5-coder-32b-instruct",
+  "MODELSCOPE_BASE_URL": "https://api-inference.modelscope.cn/v1",
+  "MODELSCOPE_MODEL": "Qwen/Qwen3-235B-A22B-Instruct-2507,Qwen/Qwen3.5-32B-Instruct"
 }
