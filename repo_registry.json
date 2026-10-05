@@ -397,15 +397,6 @@
     "pr_history": [],
     "stages_completed": []
   },
-  "rajveersinh-is-dev": {
-    "description": "Profile README for Rajveersinh Pardeshi",
-    "domain": "general_python",
-    "improvements_count": 0,
-    "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
-  },
   "dev-toolkit": {
     "domain": "general_python",
     "improvements_count": 0,
@@ -434,6 +425,15 @@
   "edge-disjoint-triangle-packings": {
     "description": "Edge-disjoint non-crossing triangle packings of planar point sets: a convex barrier and a reduction to subcubic trees",
     "domain": "physics_simulation_crypto",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
+  "edge-disjoint-triangulations": {
+    "description": "Edge-disjoint triangulations of convex polygons: packing number floor(n/2), resolutions of P_2m, and their classification (2^(m-2) of them)",
+    "domain": "general_python",
     "improvements_count": 0,
     "language": "Python",
     "last_improved_at": null,
@@ -508,6 +508,15 @@
     "pr_history": [],
     "stages_completed": []
   },
+  "rajveersinh-is-dev": {
+    "description": "Profile README for Rajveersinh Pardeshi",
+    "domain": "general_python",
+    "improvements_count": 0,
+    "language": "Python",
+    "last_improved_at": null,
+    "pr_history": [],
+    "stages_completed": []
+  },
   "terrain-erosion-engine": {
     "description": "GPU-accelerated procedural terrain generator simulating hydraulic and thermal erosion in the browser with WebGPU compute shaders and Three.js.",
     "domain": "physics_simulation_crypto",
@@ -538,10 +547,19 @@
   "umbra": {
     "description": "Research-grade Python library for MNAR-aware missing data diagnostics, identifiability bounds, and robust imputation under non-random missingness.",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-05T11:36:17.169091+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/umbra/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (11 files)",
+        "timestamp": "2026-10-05T11:36:17.169091+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   }
 }
