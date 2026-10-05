@@ -167,16 +167,23 @@ def generate_domain_readme(
     repo_name: str,
     description: str,
     python_files: list[str],
-    has_requirements: bool = True
+    has_requirements: bool = True,
+    owner: str = ""
 ) -> str:
-    """Generates an accurate, professional README tailored to the actual project."""
+    """Generates an accurate, professional README tailored to the actual project.
+
+    ``owner`` is the GitHub account that owns the repository, used to build correct
+    clone and CI badge URLs. It defaults to an empty string for backwards
+    compatibility.
+    """
     clean_name = repo_name.replace("-", " ").replace("_", " ").title()
     main_py = python_files[0] if python_files else "main.py"
+    gh = f"https://github.com/{owner}" if owner else "https://github.com"
 
     badges = (
         f"[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n"
         f"[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)\n"
-        f"[![CI](https://github.com/Raj123-0/{repo_name}/actions/workflows/ci.yml/badge.svg)](https://github.com/Raj123-0/{repo_name}/actions)\n"
+        f"[![CI]({gh}/{repo_name}/actions/workflows/ci.yml/badge.svg)]({gh}/{repo_name}/actions)\n"
     )
 
     if domain == DOMAIN_MATH_CONSTANT:
@@ -201,7 +208,7 @@ def generate_domain_readme(
 ## Installation
 
 ```bash
-git clone https://github.com/Raj123-0/{repo_name}.git
+git clone {gh}/{repo_name}.git
 cd {repo_name}
 pip install -r requirements.txt
 ```
@@ -252,7 +259,7 @@ This project is licensed under the [MIT License](LICENSE).
 ## Getting Started
 
 ```bash
-git clone https://github.com/Raj123-0/{repo_name}.git
+git clone {gh}/{repo_name}.git
 cd {repo_name}
 pip install -r requirements.txt
 ```
@@ -283,7 +290,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Getting Started
 
 ```bash
-git clone https://github.com/Raj123-0/{repo_name}.git
+git clone {gh}/{repo_name}.git
 cd {repo_name}
 pip install -r requirements.txt
 ```
@@ -316,7 +323,7 @@ Licensed under the [MIT License](LICENSE).
 ## Installation & Usage
 
 ```bash
-git clone https://github.com/Raj123-0/{repo_name}.git
+git clone {gh}/{repo_name}.git
 cd {repo_name}
 python "{main_py}" --help
 ```
