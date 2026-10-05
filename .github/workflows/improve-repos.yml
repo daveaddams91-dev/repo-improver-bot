@@ -49,12 +49,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.REPO_IMPROVER_TOKEN }}
           PROVIDER_KEYS: ${{ secrets.PROVIDER_KEYS }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          # Existing providers
           LLM2_API_KEY: ${{ secrets.LLM2_API_KEY }}
           LLM3_API_KEY: ${{ secrets.LLM3_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          # Additional free-tier providers (add the secret to activate each one)
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          SAMBANOVA_API_KEY: ${{ secrets.SAMBANOVA_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+          LLM7_API_KEY: ${{ secrets.LLM7_API_KEY }}
+          OVH_AI_API_KEY: ${{ secrets.OVH_AI_API_KEY }}
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MAX_REPOS_PER_RUN: ${{ inputs.max_repos || '2' }}
           TARGET_REPO: ${{ inputs.target_repo || '' }}
           IMPROVEMENT_MODE: ${{ inputs.mode || 'auto' }}
