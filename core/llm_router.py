@@ -146,7 +146,7 @@ class LLMRouter:
              "openai/gpt-4o-mini,openai/gpt-4o,meta/Llama-3.3-70B-Instruct"),
             ("NVIDIA NIM", ("NVIDIA_API_KEY", "NVIDIA_NIM_API_KEY"), "NVIDIA",
              "https://integrate.api.nvidia.com/v1",
-             "nvidia/nemotron-3-super-120b-a12b,qwen/qwen3-coder-480b-a35b-instruct,nvidia/nemotron-3-nano-30b-a3b"),
+             "nvidia/nemotron-3-super-120b-a12b"),
             ("Hugging Face", ("HF_TOKEN", "HUGGINGFACE_API_KEY"), "HUGGINGFACE",
              "https://router.huggingface.co/v1",
              "Qwen/Qwen2.5-72B-Instruct,meta-llama/Llama-3.3-70B-Instruct"),
@@ -212,7 +212,7 @@ class LLMRouter:
         # capable free tiers are tried before slower or more limited ones. Any
         # provider not listed (e.g. the keyless Kilo fallback) sorts last.
         _priority = [
-            "NVIDIA NIM", "Groq", "GitHub Models", "Mistral",
+            "Groq", "NVIDIA NIM", "GitHub Models", "Mistral",
             "OpenRouter", "Hugging Face", "ModelScope",
             "Z.AI", "LLM7.io", "Cohere", "Cloudflare Workers AI",
         ]
