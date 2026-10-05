@@ -62,23 +62,19 @@ The bot integrates free-tier APIs curated from [awesome-free-llm-apis](https://g
 | Provider | Env Secret | Notable Models | Free Rate Limits |
 |---|---|---|---|
 | **Groq** | `GROQ_API_KEY` | `openai/gpt-oss-120b` | 30 RPM, ~1,000–14,400 req/day |
-| **Cerebras** | `CEREBRAS_API_KEY` | `gpt-oss-120b`, `llama-3.3-70b` | 30 RPM, ~14,400 req/day |
 | **GitHub Models** | `GITHUB_MODELS_TOKEN` | `openai/gpt-4o-mini`, `meta/Llama-3.3-70B-Instruct` | 10–15 RPM, 50–150 req/day |
 | **NVIDIA NIM** | `NVIDIA_API_KEY` | `meta/llama-3.3-70b-instruct` | ~40 RPM, no daily cap |
 | **Mistral AI** | `LLM3_API_KEY` / `MISTRAL_API_KEY` | `codestral-latest`, `mistral-small-latest` | ~1 RPS, 500K tokens/min |
-| **SambaNova** | `SAMBANOVA_API_KEY` | `Meta-Llama-3.3-70B-Instruct` | 20 RPM, 20 req/day |
 | **OpenRouter** | `LLM2_API_KEY` / `OPENROUTER_API_KEY` | `:free` routes | 20 RPM, 50–1,000 req/day |
 | **Hugging Face** | `HF_TOKEN` | `Qwen/Qwen2.5-72B-Instruct` | monthly inference credits |
 | **ModelScope** | `MODELSCOPE_API_KEY` | `Qwen/Qwen3-235B-A22B-Instruct-2507` | 2,000 req/day (phone signup) |
-| **Together AI** | `TOGETHER_API_KEY` | selected `$0` models | free model tier |
 | **Z.AI (Zhipu)** | `ZAI_API_KEY` / `ZHIPU_API_KEY` | `glm-4.7-flash`, `glm-4.5-flash` | ~1,000 req/day |
 | **LLM7.io** | `LLM7_API_KEY` *(optional)* | `gpt-oss-120b` | ~30–120 RPM |
-| **OVHcloud AI** | `OVH_AI_API_KEY` *(optional)* | `Meta-Llama-3_3-70B-Instruct` | anonymous ~2 RPM |
 | **Cohere** | `COHERE_API_KEY` | `command-r-plus`, `command-r` | 20 RPM, 1,000 calls/month |
 | **Cloudflare Workers AI** | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 10,000 neurons/day |
 | **Kilo AI** | *(None required / Keyless)* | `kilo-auto/free` | 200 req/hr per IP (zero key needed!) |
 
-Providers are tried **best-first** (fastest, most generous, most capable free tiers first; the keyless Kilo fallback last). Each provider activates **only when its secret is present**, so you can add keys one at a time. More keys = more combined headroom before any single rate limit bites. Model IDs are overridable in `llm-config.json` (or via a `<PREFIX>_MODEL` env var) as providers rotate their catalogs.
+Only **permanent (lifetime) free tiers** are listed — trial-credit and card-required providers are deliberately excluded. Providers are tried **best-first** (fastest, most generous, most capable free tiers first; the keyless Kilo fallback last). Each provider activates **only when its secret is present**, so you can add keys one at a time. More keys = more combined headroom before any single rate limit bites. Model IDs are overridable in `llm-config.json` (or via a `<PREFIX>_MODEL` env var) as providers rotate their catalogs.
 
 > [!TIP]
 > **Zero Quota Exhaustion**: Even if all personal API keys hit their daily limit, the bot seamlessly cascades to Kilo AI's free model pool so autonomous scheduled runs never stop!
@@ -90,17 +86,13 @@ Providers are tried **best-first** (fastest, most generous, most capable free ti
 | `GH_TOKEN` / `REPO_IMPROVER_TOKEN` | GitHub Personal Access Token (`repo`, `workflow`) |
 | `PROVIDER_KEYS` | Optional comma-separated keys, positional order (`groq,openrouter,mistral,zai,cohere`) |
 | `GROQ_API_KEY` | Groq API Key |
-| `CEREBRAS_API_KEY` | Cerebras API Key |
 | `GITHUB_MODELS_TOKEN` | GitHub Models token (a GitHub PAT works) |
 | `NVIDIA_API_KEY` | NVIDIA NIM API Key |
 | `LLM3_API_KEY` / `MISTRAL_API_KEY` | Mistral AI API Key |
-| `SAMBANOVA_API_KEY` | SambaNova API Key |
 | `LLM2_API_KEY` / `OPENROUTER_API_KEY` | OpenRouter API Key |
 | `HF_TOKEN` / `HUGGINGFACE_API_KEY` | Hugging Face token |
-| `TOGETHER_API_KEY` | Together AI API Key |
 | `ZAI_API_KEY` / `ZHIPU_API_KEY` | Z.AI GLM API Key |
 | `LLM7_API_KEY` | LLM7.io token (optional — works anonymously too) |
-| `OVH_AI_API_KEY` | OVHcloud AI Endpoints key (optional) |
 | `MODELSCOPE_API_KEY` | ModelScope (Alibaba) API key |
 | `COHERE_API_KEY` | Cohere API Key |
 | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Workers AI |
