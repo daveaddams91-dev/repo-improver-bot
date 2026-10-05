@@ -64,7 +64,7 @@ def _clear_all_keys(monkeypatch):
         "ZHIPU_API_KEY", "CEREBRAS_API_KEY", "GITHUB_MODELS_TOKEN", "MODELS_TOKEN",
         "NVIDIA_API_KEY", "NVIDIA_NIM_API_KEY", "SAMBANOVA_API_KEY", "HF_TOKEN",
         "HUGGINGFACE_API_KEY", "TOGETHER_API_KEY", "LLM7_API_KEY", "OVH_AI_API_KEY",
-        "CLOUDFLARE_API_KEY", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID",
+        "CLOUDFLARE_API_KEY", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "MODELSCOPE_API_KEY",
         "PROVIDER_KEYS", "KILO_API_KEY",
     ):
         monkeypatch.delenv(v, raising=False)
@@ -153,3 +153,23 @@ def test_parse_json_multiline_with_trailing_comma():
     res = LLMRouter.parse_json(payload)
     assert res is not None
     assert "a = 1" in res["improved_code"]
+
+
+def test_providers_sorted_best_first(monkeypatch):
+    _clear_all_keys(monkeypatch)
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    monkeypatch.setenv("COHERE_API_KEY", "k")
+    monkeypatch.setenv("MODELSCOPE_API_KEY", "k")
+    router = LLMRouter(config={}, enable_keyless_fallback=True)
+    names = [p["name"] for p in router.providers]
+    assert names[0] == "Groq"
+    assert names[-1].startswith("KiloAI")          # keyless fallback is always last
+    assert names.index("Groq") < names.index("ModelScope") < names.index("Cohere")
+
+
+def test_modelscope_activates(monkeypatch):
+    _clear_all_keys(monkeypatch)
+    monkeypatch.setenv("MODELSCOPE_API_KEY", "k")
+    router = LLMRouter(config={}, enable_keyless_fallback=False)
+    ms = [p for p in router.providers if p["name"] == "ModelScope"]
+    assert ms and ms[0]["endpoint"] == "https://api-inference.modelscope.cn/v1/chat/completions"
