@@ -212,7 +212,7 @@ class LLMRouter:
         # capable free tiers are tried before slower or more limited ones. Any
         # provider not listed (e.g. the keyless Kilo fallback) sorts last.
         _priority = [
-            "Groq", "NVIDIA NIM", "GitHub Models", "Mistral",
+            "NVIDIA NIM", "Groq", "GitHub Models", "Mistral",
             "OpenRouter", "Hugging Face", "ModelScope",
             "Z.AI", "LLM7.io", "Cohere", "Cloudflare Workers AI",
         ]
