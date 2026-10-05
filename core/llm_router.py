@@ -152,7 +152,7 @@ class LLMRouter:
              "Qwen/Qwen2.5-72B-Instruct,meta-llama/Llama-3.3-70B-Instruct"),
             ("LLM7.io", ("LLM7_API_KEY",), "LLM7",
              "https://api.llm7.io/v1",
-             "gpt-oss-120b,llama-3.1-8b-instruct"),
+             "default,fast,pro"),
             ("ModelScope", ("MODELSCOPE_API_KEY",), "MODELSCOPE",
              "https://api-inference.modelscope.cn/v1",
              "Qwen/Qwen3-235B-A22B-Instruct-2507,Qwen/Qwen3.5-32B-Instruct"),
