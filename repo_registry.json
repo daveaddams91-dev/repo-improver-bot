@@ -540,11 +540,20 @@
   "inertia-admissible-polynomials": {
     "description": "Boolean admissibility and the q/s ceiling for graph positive inertia: exact linearisation, the s=1 case, certified data, and a conjectured barrier at 3",
     "domain": "physics_simulation_crypto",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-06T21:06:49.080829+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/inertia-admissible-polynomials/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (12 files)",
+        "timestamp": "2026-10-06T21:06:49.080829+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "mathrepl": {
     "description": "",
@@ -594,11 +603,20 @@
   "polygon-triangulation-packing": {
     "description": "Exact extremal theory for packing and covering convex polygon triangulations (tau(n), kappa(n)), with constructive proofs and computational validation.",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-06T21:08:58.378358+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/polygon-triangulation-packing/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (11 files)",
+        "timestamp": "2026-10-06T21:08:58.378358+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "rajveersinh-is-dev": {
     "description": "Profile README for Rajveersinh Pardeshi",
