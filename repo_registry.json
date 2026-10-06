@@ -417,7 +417,7 @@
   },
   "convex-thrackle-census": {
     "description": "A census of convex thrackles: residue bound, wedge lemma, and the exact count 2^(n-1)-n of maximal thrackles",
-    "domain": "systems_compiler",
+    "domain": "general_python",
     "improvements_count": 1,
     "language": "Python",
     "last_improved_at": "2026-10-06T06:39:11.953731+00:00",
@@ -515,11 +515,20 @@
   "edge-disjoint-triangulations": {
     "description": "Edge-disjoint triangulations of convex polygons: packing number floor(n/2), resolutions of P_2m, and their classification (2^(m-2) of them)",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-06T15:23:20.644508+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/edge-disjoint-triangulations/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (12 files)",
+        "timestamp": "2026-10-06T15:23:20.644508+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "havn": {
     "domain": "general_python",
@@ -594,11 +603,20 @@
   "rajveersinh-is-dev": {
     "description": "Profile README for Rajveersinh Pardeshi",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-06T15:20:42.941874+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/rajveersinh-is-dev/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (3 files)",
+        "timestamp": "2026-10-06T15:20:42.941874+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "terrain-erosion-engine": {
     "description": "GPU-accelerated procedural terrain generator simulating hydraulic and thermal erosion in the browser with WebGPU compute shaders and Three.js.",
