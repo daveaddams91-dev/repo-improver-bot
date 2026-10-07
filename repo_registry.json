@@ -657,20 +657,38 @@
   "threshold-preference-arrangements": {
     "description": "Exact chamber counts for tolerance-based distance orderings of point sets (arrangements of indifference hyperbolas)",
     "domain": "general_python",
-    "improvements_count": 0,
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-07T01:43:38.934352+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/threshold-preference-arrangements/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (12 files)",
+        "timestamp": "2026-10-07T01:43:38.934352+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "triple-cover-convex-polygon": {
     "description": "The triple-covering number of a convex n-gon: a gap-weight certificate lower bound for all n, exact values (certified) for n<=14, and a solved boundary-edge sub-problem",
-    "domain": "general_python",
-    "improvements_count": 0,
+    "domain": "systems_compiler",
+    "improvements_count": 1,
     "language": "Python",
-    "last_improved_at": null,
-    "pr_history": [],
-    "stages_completed": []
+    "last_improved_at": "2026-10-07T01:45:29.856405+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/triple-cover-convex-polygon/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (12 files)",
+        "timestamp": "2026-10-07T01:45:29.856405+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
   },
   "umbra": {
     "description": "Research-grade Python library for MNAR-aware missing data diagnostics, identifiability bounds, and robust imputation under non-random missingness.",
