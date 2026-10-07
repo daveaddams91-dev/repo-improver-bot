@@ -99,6 +99,32 @@ Only **permanent (lifetime) free tiers** are listed — trial-credit and card-re
 | `MAX_REPOS_PER_RUN` | Max repos to process per scheduled execution (default: `2`) |
 | `TARGET_REPO` | Optional repository name to explicitly target |
 | `IMPROVEMENT_MODE` | Optional stage override (`auto`, `tests`, `benchmarks`, `optimization`, `documentation`) |
+| `BOT_AUTO_MERGE` | `true` to let the bot merge its own PRs. Default `false`: PRs are opened and left for review. |
+| `BOT_MERGE_METHOD` | `squash` (default), `merge` or `rebase` |
+| `BOT_CI_WAIT_SECONDS` | How long to wait for CI to report before deciding (default: `300`) |
+| `BOT_CI_POLL_SECONDS` | Poll interval while waiting for CI (default: `15`) |
+| `BOT_MERGE_WITHOUT_CI` | `true` to allow merging a repo that has no CI at all (default: `false`) |
+
+### Merge safety
+
+By default the bot **opens a pull request and leaves it alone**. It rewrites files
+it did not write, and its transforms have previously changed program behaviour
+while still producing valid syntax, so an unattended merge is the riskiest thing
+it can do. Every skipped merge writes the PR URL to `MERGE_REQUEST.md`.
+
+If you enable `BOT_AUTO_MERGE=true`, it still refuses to merge unless checks are
+green:
+
+| Check state | Behaviour |
+|---|---|
+| passing | merges |
+| failing | refuses, leaves the PR open |
+| still running | waits up to `BOT_CI_WAIT_SECONDS`, then refuses |
+| no CI configured | refuses unless `BOT_MERGE_WITHOUT_CI=true` |
+| unreadable | refuses |
+
+The bot also never improves the repository named after your GitHub account, since
+that repo's README *is* your profile page.
 
 ---
 
@@ -129,4 +155,4 @@ Only **permanent (lifetime) free tiers** are listed — trial-credit and card-re
 
 ## License
 
-MIT License. Copyright (c) 2026 Raj123-0.
+MIT License. Copyright (c) 2026 Rajveersinh Pardeshi.

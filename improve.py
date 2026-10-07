@@ -45,6 +45,18 @@ _OWNER_CACHE = None
 SEVEN_DAYS_AGO = datetime.now(timezone.utc) - timedelta(days=7)
 TODAY = datetime.now(timezone.utc).strftime("%Y%m%d")
 
+# How the bot finishes a PR. "review" opens the PR and leaves it for a human,
+# which is the default because this bot rewrites files it did not write and its
+# transforms have previously changed behaviour silently. Set
+# BOT_AUTO_MERGE=true to let it merge unattended.
+AUTO_MERGE = os.environ.get("BOT_AUTO_MERGE", "").strip().lower() in ("1", "true", "yes")
+MERGE_METHOD = os.environ.get("BOT_MERGE_METHOD", "squash").strip() or "squash"
+# Seconds to let CI report before merging, and how often to poll.
+CI_WAIT_SECONDS = int(os.environ.get("BOT_CI_WAIT_SECONDS", "300") or 300)
+CI_POLL_SECONDS = int(os.environ.get("BOT_CI_POLL_SECONDS", "15") or 15)
+# In auto mode, whether a repo with no CI at all may be merged.
+MERGE_WITHOUT_CI = os.environ.get("BOT_MERGE_WITHOUT_CI", "").strip().lower() in ("1", "true", "yes")
+
 # ---------------------------------------------------------------------------
 # GitHub API helpers
 # ---------------------------------------------------------------------------
@@ -328,6 +340,42 @@ jobs:
 """
 
 
+def _pyproject_license(repo_info):
+    """Return (license_field, classifier) for the repo's real licence.
+
+    Returns (None, None) when the licence is unknown, so we omit the field
+    rather than assert MIT on a project that is not MIT licensed.
+    """
+    spdx = str(((repo_info or {}).get("license") or {}).get("spdx_id") or "").upper()
+    mapping = {
+        "MIT": ('{text = "MIT"}', "License :: OSI Approved :: MIT License"),
+        "MIT-0": ('{text = "MIT"}', "License :: OSI Approved :: MIT License"),
+        "APACHE-2.0": ('{text = "Apache-2.0"}',
+                       "License :: OSI Approved :: Apache Software License"),
+        "BSD-3-CLAUSE": ('{text = "BSD-3-Clause"}',
+                          "License :: OSI Approved :: BSD License"),
+        "BSD-2-CLAUSE": ('{text = "BSD-2-Clause"}',
+                          "License :: OSI Approved :: BSD License"),
+        "GPL-3.0": ('{text = "GPL-3.0-only"}',
+                     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"),
+        "MPL-2.0": ('{text = "MPL-2.0"}',
+                     "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"),
+    }
+    return mapping.get(spdx, (None, None))
+
+
+def _pyproject_topics(domain, repo_name, description):
+    """Domain-appropriate Trove classifier, instead of always Mathematics."""
+    mapping = {
+        "combinatorics": "Topic :: Scientific/Engineering :: Mathematics",
+        "scientific_python": "Topic :: Scientific/Engineering :: Physics",
+        "ml_llm": "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "web_js": "Topic :: Software Development :: Libraries :: Application Frameworks",
+        "general_python": "Topic :: Software Development :: Libraries :: Python Modules",
+    }
+    return mapping.get(domain, mapping["general_python"])
+
+
 def generate_pyproject(repo_name, repo_info, python_files):
     """Generate a pyproject.toml with proper project metadata."""
     clean_name = repo_name.replace("-", "_").replace("'", "").replace(" ", "_").lower()
@@ -340,6 +388,29 @@ def generate_pyproject(repo_name, repo_info, python_files):
     owner = get_owner()
     repo_url = f"https://github.com/{owner}/{repo_name}" if owner else f"https://github.com/{repo_name}"
 
+    # Only claim a licence the repo actually declares.
+    license_field, license_classifier = _pyproject_license(repo_info)
+    try:
+        from core.registry import detect_domain
+        domain = detect_domain(repo_name, repo_info.get("description") or "")
+    except Exception:
+        domain = "general_python"
+    topic_classifier = _pyproject_topics(domain, repo_name, repo_info.get("description") or "")
+
+    license_line = f"license = {license_field}\n" if license_field else ""
+    # NB: TOML arrays need commas between entries.
+    classifier_lines = [
+        "    \"Programming Language :: Python :: 3\",",
+        "    \"Programming Language :: Python :: 3.10\",",
+        "    \"Programming Language :: Python :: 3.11\",",
+        "    \"Programming Language :: Python :: 3.12\",",
+    ]
+    if license_classifier:
+        classifier_lines.append(f"    \"{license_classifier}\",")
+    classifier_lines.append("    \"Operating System :: OS Independent\",")
+    classifier_lines.append(f"    \"{topic_classifier}\"")
+    classifiers_block = "\n".join(classifier_lines)
+
     return f'''[build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
@@ -350,18 +421,11 @@ version = "1.0.0"
 description = "{desc}"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {{text = "MIT"}}
-authors = [
+{license_line}authors = [
     {{name = "{owner or 'the project authors'}"}},
 ]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Mathematics",
+{classifiers_block}
 ]
 
 [project.urls]
@@ -2080,17 +2144,116 @@ def create_pr(owner, repo, head, base, title, body):
 # ---------------------------------------------------------------------------
 # Step 6: Merge PR
 # ---------------------------------------------------------------------------
+def get_pr_checks(owner, repo, pr_number):
+    """Return (state, summary) for a PR's checks.
+
+    state is one of: "none", "pending", "failing", "passing", "unknown".
+    Uses the combined status API plus check runs, since a repo may use either.
+    """
+    head_sha = None
+    try:
+        pr = gh_get(f"/repos/{owner}/{repo}/pulls/{pr_number}")
+        head_sha = pr.get("head", {}).get("sha")
+    except Exception as e:
+        print(f"  (could not read PR #{pr_number}: {e})")
+        return "unknown", "PR unreadable"
+
+    if not head_sha:
+        return "unknown", "no head sha"
+
+    states, total = [], 0
+    try:
+        combined = gh_get(f"/repos/{owner}/{repo}/commits/{head_sha}/status")
+        total += int(combined.get("total_count") or 0)
+        for s in combined.get("statuses", []):
+            states.append(s.get("state", ""))
+    except Exception:
+        pass
+
+    try:
+        runs = gh_get(f"/repos/{owner}/{repo}/commits/{head_sha}/check-runs")
+        for r in runs.get("check_runs", []):
+            total += 1
+            if r.get("status") != "completed":
+                states.append("pending")
+            else:
+                states.append(r.get("conclusion") or "unknown")
+    except Exception:
+        pass
+
+    if total == 0:
+        return "none", "no checks configured"
+    if any(s in ("failure", "timed_out", "cancelled", "action_required", "startup_failure")
+           for s in states):
+        return "failing", f"{len(states)} check(s), at least one failed"
+    if any(s in ("", "pending", "queued", "in_progress", "neutral", "stale") for s in states):
+        return "pending", f"{len(states)} check(s) still running"
+    return "passing", f"{len(states)} check(s) passed"
+
+
+def wait_for_checks(owner, repo, pr_number, timeout=None):
+    """Poll checks until they settle. Returns the final state."""
+    timeout = CI_WAIT_SECONDS if timeout is None else timeout
+    waited = 0
+    while True:
+        state, summary = get_pr_checks(owner, repo, pr_number)
+        print(f"  checks: {state} ({summary})")
+        if state in ("passing", "failing", "none"):
+            return state, summary
+        if waited >= timeout:
+            print(f"  checks still running after {timeout}s; not merging.")
+            return "pending", summary
+        time.sleep(CI_POLL_SECONDS)
+        waited += CI_POLL_SECONDS
+
+
+def write_merge_request(repo_full, pr_url, pr_number, reason):
+    """Leave a visible note so an unmerged PR is not forgotten."""
+    try:
+        with open("MERGE_REQUEST.md", "w", encoding="utf-8") as fh:
+            fh.write(
+                "# Awaiting review\n\n"
+                f"Repository: `{repo_full}`\n\n"
+                f"PR: {pr_url} (#{pr_number})\n\n"
+                f"Reason: {reason}\n\n"
+                "This bot rewrites files autonomously. Review the diff before "
+                "merging, especially any changes to code that already had tests.\n"
+            )
+    except OSError as e:
+        print(f"  (could not write MERGE_REQUEST.md: {e})")
+
+
 def merge_pr(owner, repo, pr_number):
+    """Merge a PR, honouring AUTO_MERGE and refusing while checks are not green."""
+    if not AUTO_MERGE:
+        print("  Auto-merge disabled (default). Leaving PR open for review.")
+        return False
+
+    state, summary = wait_for_checks(owner, repo, pr_number)
+    if state == "failing":
+        print(f"  Refusing to merge: {summary}")
+        return False
+    if state == "pending":
+        print(f"  Refusing to merge while checks are running: {summary}")
+        return False
+    if state == "none" and not MERGE_WITHOUT_CI:
+        print("  Refusing to merge: no CI checks on this repo "
+              "(set BOT_MERGE_WITHOUT_CI=true to override).")
+        return False
+    if state == "unknown":
+        print("  Refusing to merge: check state could not be determined.")
+        return False
+
     for attempt in range(3):
         result = gh_put(f"/repos/{owner}/{repo}/pulls/{pr_number}/merge", {
-            "merge_method": "squash",
+            "merge_method": MERGE_METHOD,
         })
         if result is not None:
-            print(f"  PR #{pr_number} merged successfully!")
+            print(f"  PR #{pr_number} merged successfully ({MERGE_METHOD}).")
             return True
         print(f"  Merge attempt {attempt+1} failed, waiting 10s...")
         time.sleep(10)
-    print(f"  PR #{pr_number} could not be merged — left open for review.")
+    print(f"  PR #{pr_number} could not be merged - left open for review.")
     return False
 
 
@@ -2282,12 +2445,17 @@ def main():
     pr_url = pr["html_url"] if pr else None
     pr_number = pr["number"] if pr else None
 
-    # Step 6: Merge
+    # Step 6: Merge (gated; see AUTO_MERGE)
     if pr and pr_number:
-        print(f"\nMerging PR #{pr_number}...")
-        time.sleep(5)
         merged = merge_pr(owner, repo_name, pr_number)
-        status = "merged" if merged else "open"
+        if merged:
+            status = "merged"
+        else:
+            # Distinguish "waiting on a human" from "we tried and failed".
+            state, summary = get_pr_checks(owner, repo_name, pr_number)
+            status = "awaiting_review" if state != "failing" else "checks_failed"
+            write_merge_request(repo_full, pr_url, pr_number, summary)
+            print(f"  PR left open for review: {pr_url}")
     else:
         status = "pr_failed"
         merged = False
