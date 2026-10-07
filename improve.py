@@ -184,7 +184,16 @@ def select_repo(exclude=None):
 # Step 2: Get repo file tree
 # ---------------------------------------------------------------------------
 def get_repo_tree(owner, repo, branch="main"):
-    ref = gh_get(f"/repos/{owner}/{repo}/git/refs/heads/{branch}")
+    try:
+        ref = gh_get(f"/repos/{owner}/{repo}/git/refs/heads/{branch}")
+    except Exception as e:
+        print(f"  (could not resolve branch '{branch}' for {owner}/{repo}: {e})")
+        try:
+            branch = gh_get(f"/repos/{owner}/{repo}").get("default_branch", branch)
+            ref = gh_get(f"/repos/{owner}/{repo}/git/refs/heads/{branch}")
+        except Exception as e2:
+            print(f"  (skipping {owner}/{repo}: {e2})")
+            return None, {"tree": []}
     head_sha = ref["object"]["sha"]
     commit = gh_get(f"/repos/{owner}/{repo}/git/commits/{head_sha}")
     tree_sha = commit["tree"]["sha"]
@@ -1262,8 +1271,12 @@ class CodeTransformer:
                                     arg_idx = num_args - num_defaults + idx
                                     if arg_idx < len(node.args.args):
                                         param_name = node.args.args[arg_idx].arg
-                                        factory = "[]" if isinstance(default, ast.List) else \
-                                                  "{}" if isinstance(default, ast.Dict) else "()"
+                                        # Reuse the literal the author wrote. Rebinding it
+                                        # inside the function builds a fresh object per call,
+                                        # which is the point of the sentinel, and keeps the
+                                        # original value. Previously this emitted an empty
+                                        # container, silently changing the default.
+                                        factory = old_text
                                         body_inserts.append((node, param_name, factory))
                                         break
                             lines[line_no] = lines[line_no][:col] + "None" + lines[line_no][col + len(old_text):]
@@ -1304,8 +1317,22 @@ class CodeTransformer:
             return None
 
         used_names = CodeAnalyzer.get_used_names(tree)
+
+        # A name can be used without ever appearing as an ast.Name:
+        #   __all__ = ["os"]         -> deliberate re-export
+        #   def f(x: "typing.List")  -> only inside a string
+        #   eval("math.pi")          -> invisible to static analysis
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                used_names.update(re.findall(r"[A-Za-z_]\w*", node.value))
+
+        # Dynamic execution can reach any name, so never prune this file.
+        if any(isinstance(n, ast.Name) and n.id in ("eval", "exec", "__import__")
+               for n in ast.walk(tree)):
+            return None
+
         lines = source.split("\n")
-        lines_to_remove = set()
+        lines_to_remove = set()   # int line index, or ("REPLACE", idx, text)
 
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -1318,24 +1345,38 @@ class CodeTransformer:
                 # Never remove 'from __future__ import annotations'
                 if node.module == "__future__":
                     continue
-                all_unused = True
+                kept, dropped = [], []
                 for alias in node.names:
-                    local_name = alias.asname or alias.name
-                    if local_name == "*":
-                        all_unused = False
-                        break
-                    if local_name in used_names:
-                        all_unused = False
-                        break
-                if all_unused:
+                    if alias.name == "*" or (alias.asname or alias.name) in used_names:
+                        kept.append(alias)
+                    else:
+                        dropped.append(alias)
+                if not kept:
                     lines_to_remove.add(node.lineno - 1)
                     names_str = ", ".join(a.name for a in node.names)
-                    self.fixes_applied.append(f"removed unused import: from {node.module} import {names_str}")
+                    self.fixes_applied.append(
+                        f"removed unused import: from {node.module} import {names_str}")
+                elif dropped:
+                    # Keep the used aliases; dropping the whole line would
+                    # remove names the file still relies on.
+                    kept_src = ", ".join(
+                        f"{a.name} as {a.asname}" if a.asname else a.name for a in kept)
+                    lines_to_remove.add(
+                        ("REPLACE", node.lineno - 1, f"from {node.module} import {kept_src}"))
+                    self.fixes_applied.append(
+                        "removed unused import(s) from {}: {}".format(
+                            node.module, ", ".join(a.name for a in dropped)))
 
         if lines_to_remove:
-            new_lines = [line for i, line in enumerate(lines) if i not in lines_to_remove]
+            removals = {x for x in lines_to_remove if isinstance(x, int)}
+            replacements = {x[1]: x[2] for x in lines_to_remove if isinstance(x, tuple)}
+            new_lines = [replacements.get(i, line)
+                         for i, line in enumerate(lines) if i not in removals]
             result = "\n".join(new_lines)
             result = re.sub(r'\n{3,}', '\n\n\n', result)
+            # Never hand back something that no longer parses.
+            if CodeAnalyzer.parse(result) is None:
+                return None
             return result
         return None
 
@@ -1403,9 +1444,9 @@ class CodeTransformer:
         if insert_at < len(lines) and re.match(r'^#.*coding[:=]', lines[insert_at]):
             insert_at += 1
 
-        # Skip future imports
-        if insert_at < len(lines) and "from __future__" in lines[insert_at]:
-            insert_at += 1
+        # Deliberately do NOT step past "from __future__" imports. A module
+        # docstring must be the first statement or it is not a docstring at all,
+        # and __future__ imports only have to precede other code.
 
         docstring = '"""Module for mathematical computation and analysis."""'
         lines.insert(insert_at, docstring)
@@ -1793,10 +1834,12 @@ def improve_python_file(content, filepath):
 
     # Also try adding module docstring
     if fixed is not None:
+        before = len(transformer.fixes_applied)
         result = transformer.add_module_docstring(fixed)
         if result is not None and CodeAnalyzer.parse(result) is not None:
             fixed = result
-            fixes.append("added module-level docstring")
+            if len(transformer.fixes_applied) == before:
+                fixes.append("added module-level docstring")
     else:
         result = transformer.add_module_docstring(content)
         if result is not None and CodeAnalyzer.parse(result) is not None:
@@ -1821,11 +1864,18 @@ def improve_readme(content, repo_info, python_files):
     """Improve an existing README with badges and better structure."""
     improved = content
 
-    # Add badges if missing
+    # Badges. The licence badge must reflect the repo's real licence; claiming
+    # MIT on an Apache-2.0 project is false, and the word "License" in the badge
+    # previously suppressed the genuine licence section below.
+    spdx = str(((repo_info or {}).get("license") or {}).get("spdx_id") or "").upper()
     if "img.shields.io" not in improved and "badge" not in improved.lower():
-        badge_block = """[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-"""
+        badges = []
+        if spdx in ("MIT", "MIT-0"):
+            badges.append("[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)")
+        elif spdx and spdx != "NOASSERTION":
+            badges.append(f"[![License: {spdx}](https://img.shields.io/badge/License-{spdx}-blue.svg)](#license)")
+        badges.append("[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)")
+        badge_block = "\n".join(badges) + "\n"
         # Insert after the first heading
         lines = improved.split("\n")
         if lines and lines[0].startswith("#"):
@@ -1838,8 +1888,13 @@ def improve_readme(content, repo_info, python_files):
     if not improved.endswith("\n"):
         improved += "\n"
 
-    if "license" not in improved.lower() and "licence" not in improved.lower():
-        improved += "\n## License\n\nThis project is licensed under the MIT License.\n"
+    # Only state a licence we can actually confirm from the repo metadata.
+    spdx = str(((repo_info or {}).get("license") or {}).get("spdx_id") or "").upper()
+    if spdx in ("MIT", "MIT-0"):
+        lowered = improved.lower()
+        has_section = "\n## license" in lowered or "\n## licence" in lowered
+        if not has_section:
+            improved += "\n## License\n\nMIT. See the LICENSE file.\n"
 
     if "## Usage" not in improved and "## usage" not in improved.lower():
         usage = "\n## Usage\n\n"
@@ -1866,7 +1921,6 @@ def analyze_and_improve(repo_info):
     files = [f for f in tree.get("tree", []) if f["type"] == "blob"]
 
     changes = {}
-    has_readme = False
     has_gitignore = False
     has_requirements = False
     has_license = False
@@ -1876,8 +1930,6 @@ def analyze_and_improve(repo_info):
     for f in files:
         path = f["path"]
         lower = path.lower()
-        if lower == "readme.md" or lower == "readme.rst" or lower == "readme.txt":
-            has_readme = True
         if lower == ".gitignore":
             has_gitignore = True
         if lower == "requirements.txt" or lower == "requirement.txt":
@@ -2082,11 +2134,24 @@ def improve_repo_metadata(repo_info):
         print(f"  + Set repo description: {desc}")
         changed = True
 
-    # Add topics if missing
+    # Topics are derived from the detected domain. A single hardcoded set
+    # mislabels every repo that is not a high-precision maths project.
     if not repo_info.get("topics"):
-        topics = ["python", "mathematics", "scientific-computing", "high-precision"]
+        try:
+            from core.registry import detect_domain
+            domain = detect_domain(repo, repo_info.get("description") or "")
+        except Exception:
+            domain = "general_python"
+        by_domain = {
+            "combinatorics": ["combinatorics", "graph-theory", "discrete-mathematics"],
+            "scientific_python": ["scientific-computing", "simulation", "python"],
+            "ml_llm": ["llm", "automation", "python"],
+            "web_js": ["javascript", "webgpu", "visualization"],
+            "general_python": ["python"],
+        }
+        topics = by_domain.get(domain, ["python"])
         gh_put(f"/repos/{owner}/{repo}/topics", {"names": topics})
-        print(f"  + Added repo topics: {', '.join(topics)}")
+        print(f"  + Added repo topics ({domain}): {', '.join(topics)}")
         changed = True
 
     return changed
