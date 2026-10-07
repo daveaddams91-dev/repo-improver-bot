@@ -133,6 +133,21 @@ def get_pinned_repos():
         return set()
 
 
+def protected_repos():
+    """Repository names that must never be autonomously improved.
+
+    Includes the *profile* repo, i.e. the repo named exactly after the account.
+    Its README is the GitHub profile page itself, so a README "upgrade" would
+    overwrite the profile. Derived from get_owner() so it survives renames.
+    """
+    names = {"test", "repo-improver-bot",
+             "fransen-robinson-record", "eulerian-fluid-solver"}
+    owner = get_owner()
+    if owner:
+        names.add(owner)
+    return names
+
+
 def select_repo(exclude=None):
     exclude = set(exclude or [])
     pinned = get_pinned_repos()
@@ -144,8 +159,7 @@ def select_repo(exclude=None):
         "page": 1,
     }
     repos = gh_get("/user/repos", params=params)
-    skip = exclude | pinned | {"test", "repo-improver-bot",
-                              "fransen-robinson-record", "eulerian-fluid-solver"}
+    skip = exclude | pinned | protected_repos()
     for repo in repos:
         if repo.get("archived") or repo.get("fork"):
             continue

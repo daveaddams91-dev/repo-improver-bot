@@ -354,7 +354,7 @@ def main():
     print("=" * 65)
 
     pinned = improve.get_pinned_repos()
-    skip = pinned | {"test", "repo-improver-bot", "fransen-robinson-record", "eulerian-fluid-solver"}
+    skip = pinned | improve.protected_repos()
 
     try:
         repos_data = improve.gh_get("/user/repos", params={
