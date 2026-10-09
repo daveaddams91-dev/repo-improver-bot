@@ -530,6 +530,24 @@
       "hygiene"
     ]
   },
+  "erdos-powerful-triples": {
+    "description": "Partial results and an honest negative report on the Erdos-Mollin-Walsh conjecture (three consecutive powerful numbers)",
+    "domain": "math_constant_oeis",
+    "improvements_count": 1,
+    "language": "Python",
+    "last_improved_at": "2026-10-09T17:07:48.486773+00:00",
+    "pr_history": [
+      {
+        "pr_url": "https://github.com/rajveersinh-is-dev/erdos-powerful-triples/pull/1",
+        "stage": "hygiene",
+        "summary": "chore: repository modernization and quality upgrades (11 files)",
+        "timestamp": "2026-10-09T17:07:48.486773+00:00"
+      }
+    ],
+    "stages_completed": [
+      "hygiene"
+    ]
+  },
   "havn": {
     "domain": "general_python",
     "improvements_count": 0,
